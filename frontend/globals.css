@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+@import '@fontsource/geist';
+
+.neollmchat-light {
+	--background: #f8f7fa;
+	--foreground: #3d3c4f;
+	--card: #ffffff;
+	--card-foreground: #3d3c4f;
+	--popover: #ffffff;
+	--popover-foreground: #3d3c4f;
+	--primary: #8a79ab;
+	--primary-foreground: #f8f7fa;
+	--secondary: #dfd9ec;
+	--secondary-foreground: #3d3c4f;
+	--muted: #dcd9e3;
+	--muted-foreground: #6b6880;
+	--accent: #e6a5b8;
+	--accent-foreground: #4b2e36;
+	--destructive: #d95c5c;
+	--destructive-foreground: #f8f7fa;
+	--border: #cec9d9;
+}
+
+.neollmchat-dark {
+	--background: #1a1823;
+	--foreground: #e0ddef;
+	--card: #232030;
+	--card-foreground: #e0ddef;
+	--popover: #232030;
+	--popover-foreground: #e0ddef;
+	--primary: #a995c9;
+	--primary-foreground: #1a1823;
+	--secondary: #5a5370;
+	--secondary-foreground: #e0ddef;
+	--muted: #242031;
+	--muted-foreground: #a09aad;
+	--accent: #372e3f;
+	--accent-foreground: #f2b8c6;
+	--destructive: #e57373;
+	--destructive-foreground: #1a1823;
+	--border: #302c40;
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-border: var(--border);
+}
+
+@layer base {
+	::-webkit-scrollbar {
+		@apply size-1.5;
+	}
+	::-webkit-scrollbar-track {
+		@apply bg-transparent my-1.5;
+	}
+	::-webkit-scrollbar-thumb {
+		@apply bg-muted-foreground rounded-lg;
+	}
+	::selection {
+		@apply bg-primary text-background;
+	}
+	* {
+		@apply box-border border-border;
+	}
+	html {
+		@apply scroll-smooth;
+	}
+	body {
+		@apply font-["Geist"] bg-background text-foreground overflow-hidden;
+	}
+}
+
+@layer utilities {
+	.size-screen {
+		@apply w-screen h-screen;
+	}
+	.flex-center-center {
+		@apply flex justify-center items-center;
+	}
+	.flex-between-center {
+		@apply flex justify-between items-center;
+	}
+	.flex-start-center {
+		@apply flex justify-start items-center;
+	}
+	.flex-end-center {
+		@apply flex justify-end items-center;
+	}
+	.transition-smooth {
+		@apply transition-all duration-300 ease-in-out;
+	}
+}

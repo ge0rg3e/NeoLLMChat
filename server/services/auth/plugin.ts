@@ -1,0 +1,37 @@
+import { users } from '../database/schema';
+import { db } from '../database';
+import { eq } from 'drizzle-orm';
+import jwt from '@elysiajs/jwt';
+import Elysia from 'elysia';
+
+const authPlugin = (app: Elysia) =>
+	app
+		.use(
+			jwt({
+				name: 'jwt',
+				secret: Bun.env.JWT_SECRET!
+			})
+		)
+		.derive(async ({ jwt, cookie: { accessToken }, set }) => {
+			if (!accessToken.value) {
+				set.status = 401;
+				throw new Error('Access token is missing');
+			}
+
+			const jwtPayload = await jwt.verify(accessToken.value);
+			if (!jwtPayload) {
+				set.status = 403;
+				throw new Error('Access token is invalid');
+			}
+
+			const user = await db.query.users.findFirst({ where: eq(users.id, String(jwtPayload.sub)), columns: { id: true, username: true } });
+
+			if (!user) {
+				set.status = 403;
+				throw new Error('Access token is invalid');
+			}
+
+			return { user };
+		});
+
+export default authPlugin;
