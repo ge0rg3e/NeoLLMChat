@@ -11,6 +11,7 @@ import Home from './pages/home';
 
 // Style
 import './globals.css';
+import 'highlight.js/styles/github.css';
 
 const router = createBrowserRouter([
 	{
