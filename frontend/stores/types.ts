@@ -11,14 +11,15 @@ export type Session =
 	| {
 			id: string;
 			username: string;
+			role: 'admin' | 'user';
 	  }
 	| null
 	| undefined;
 
 export type Model = {
-	id: string;
+	id: string; // DB ID
+	model: string;
 	provider: string;
-	params: any;
 };
 
 export type Chat = {

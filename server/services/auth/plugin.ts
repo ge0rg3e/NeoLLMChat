@@ -24,7 +24,7 @@ const authPlugin = (app: Elysia) =>
 				throw new Error('Access token is invalid');
 			}
 
-			const user = await db.query.users.findFirst({ where: eq(users.id, String(jwtPayload.sub)), columns: { id: true, username: true } });
+			const user = await db.query.users.findFirst({ where: eq(users.id, String(jwtPayload.sub)), columns: { id: true, username: true, role: true } });
 
 			if (!user) {
 				set.status = 403;

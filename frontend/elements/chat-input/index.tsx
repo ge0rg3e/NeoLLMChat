@@ -44,7 +44,7 @@ const ChatInput = () => {
 		createRequest({ requestId, chatId: targetChatId, abortController, content: '' });
 
 		try {
-			const response = await apiClient.chat.post({ chatId: targetChatId, requestId, model: selectedModel, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
+			const response = await apiClient.chat.post({ chatId: targetChatId, requestId, modelId: selectedModel.id, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
 			if (!response.data) return;
 
 			// Process streaming response
@@ -114,8 +114,8 @@ const ChatInput = () => {
 						}}
 						value={chatInput}
 					/>
-					<div className="flex items-center justify-between w-full px-4 py-2">
-						<ModelSelector />
+					<div className="flex items-center justify-between w-full p-2.5 py-2">
+						<ModelSelector orientation={pathname.includes('/c') ? 'top' : 'bottom'} />
 						<button
 							className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary hover:bg-primary/80 transition-colors text-card disabled:bg-primary/60 disabled:cursor-not-allowed"
 							disabled={buttonState.disabled}

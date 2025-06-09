@@ -1,8 +1,13 @@
+import Button from '~frontend/components/button';
 import { useNavigate } from 'react-router';
+import useTheme from '~frontend/lib/theme';
 import apiClient from '~frontend/lib/api';
 import useStore from '~frontend/stores';
+import { MoonIcon, SunIcon } from 'lucide-react';
+import { twMerge } from '~frontend/lib/utils';
 
 const GeneralTab = () => {
+	const { theme, setTheme } = useTheme();
 	const navigate = useNavigate();
 	const { session } = useStore();
 
@@ -42,18 +47,32 @@ const GeneralTab = () => {
 				</div>
 
 				{/* Logout */}
-				<button className="absolute right-0 text-destructive font-medium px-2.5 py-1 rounded-lg cursor-pointer transition-smooth hover:bg-destructive/5" onClick={handleLogout}>
+				<Button variant="ghost" className="absolute right-0 !text-destructive hover:bg-destructive/5" onClick={handleLogout}>
 					LogOut
-				</button>
+				</Button>
+			</div>
+
+			{/* Theme Selector */}
+			<div className="flex-between-center">
+				<div>Theme</div>
+
+				<div className="flex-end-center gap-x-1">
+					<Button className={twMerge(theme === 'dark' && 'bg-accent')} variant="ghost" size="icon" title="Dark Theme" onClick={() => setTheme('dark')}>
+						<MoonIcon />
+					</Button>
+					<Button className={twMerge(theme === 'light' && 'bg-accent')} variant="ghost" size="icon" title="Light Theme" onClick={() => setTheme('light')}>
+						<SunIcon />
+					</Button>
+				</div>
 			</div>
 
 			{/* Data Control */}
 			<div className="flex-between-center">
 				<div>Delete Chats History</div>
 
-				<button className="bg-accent/30 border font-medium px-3 py-1 rounded-lg cursor-pointer transition-smooth hover:bg-accent/80" onClick={handleDeleteChats}>
+				<Button variant="outline" onClick={handleDeleteChats}>
 					Delete
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

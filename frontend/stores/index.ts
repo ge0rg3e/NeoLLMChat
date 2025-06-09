@@ -49,20 +49,12 @@ const useStore = create<Store>()((set) => ({
 	// actions - other
 	init: async () => {
 		try {
-			const session = await getSession();
+			const session = (await getSession()) as Session;
 			const chats = await apiClient.chats.get();
+			const models = await apiClient.models.get();
 			const theme = (localStorage.getItem('theme') as Theme) ?? 'dark';
 
-			const models = [
-				{
-					id: 'llama3.2',
-					provider: 'ollama',
-					params: {}
-				}
-			];
-			const selectedModel = models[0];
-
-			set({ session, chats: chats.data as any as Chat[], theme, models, selectedModel });
+			set({ session, chats: chats.data as any as Chat[], theme, models: models.data!, selectedModel: models.data![0] ?? null });
 		} catch (err) {
 			console.error('>> NeoLLMChat - Failed initialize store data.', err);
 		}

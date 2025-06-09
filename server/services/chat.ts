@@ -1,22 +1,14 @@
+import { chats, models } from './database/schema';
+import { decrypt } from './data-encryption';
 import { Stream } from '@elysiajs/stream';
-import { chats } from './database/schema';
 import authPlugin from './auth/plugin';
+import { and, eq } from 'drizzle-orm';
 import Elysia, { t } from 'elysia';
 import { v4 as uuid } from 'uuid';
-import { and, eq } from 'drizzle-orm';
 import { db } from './database';
 import OpenAI from 'openai';
 
 const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
-
-const PROVIDER_CONFIG: Record<string, { baseURL: string; apiKey: string }> = {
-	ollama: { baseURL: 'http://localhost:11434/v1', apiKey: 'ollama' }
-} as const;
-
-const createProvider = (providerName: string) => {
-	const providerDetails = PROVIDER_CONFIG[providerName] || { baseURL: '', apiKey: '' };
-	return new OpenAI(providerDetails);
-};
 
 const getOrCreateChat = async (chatId: string, userId: string) => {
 	let chat = await db.query.chats.findFirst({ where: eq(chats.id, chatId) });
@@ -48,8 +40,17 @@ const closeStream = (stream: any, isStreamClosed: boolean) => {
 	return true;
 };
 
+const getModel = async (id: string) => {
+	const model = await db.query.models.findFirst({ where: eq(models.id, id) });
+	if (!model) return null;
+
+	const decryptedApiKey = (await decrypt(model.apiKey)) as string;
+	return { id: model.id, model: model.model, provider: model.provider, apiUrl: model.apiUrl, decryptedApiKey };
+};
+
 const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
+	.get('/models', async () => await db.query.models.findMany({ columns: { id: true, model: true, provider: true, apiUrl: true } }))
 	.post(
 		'/chat',
 		async ({ body, request, user }) => {
@@ -73,14 +74,19 @@ const chatService = new Elysia({ prefix: '/api' })
 					// Fetch or create chat
 					await getOrCreateChat(body.chatId, user.id);
 
-					// Initialize OpenAI provider
-					const provider = createProvider(body.model.provider);
+					const model = await getModel(body.modelId);
+					if (!model) {
+						throw new Error('Model not found');
+					}
+
+					// Initialize AI provider
+					const provider = new OpenAI({ baseURL: model.apiUrl, apiKey: model.decryptedApiKey });
 
 					// Stream AI response
 					const aiResponse = await provider.chat.completions.create(
 						{
 							messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...body.messages],
-							model: body.model.id,
+							model: model.model,
 							stream: true
 						},
 						{ signal: abortController.signal }
@@ -122,18 +128,14 @@ const chatService = new Elysia({ prefix: '/api' })
 			body: t.Object({
 				chatId: t.String(),
 				requestId: t.String(),
+				modelId: t.String(),
 				messages: t.Array(
 					t.Object({
 						id: t.String(),
 						role: t.Union([t.Literal('user'), t.Literal('assistant')]),
 						content: t.String()
 					})
-				),
-				model: t.Object({
-					id: t.String(),
-					provider: t.String(),
-					params: t.Any()
-				})
+				)
 			})
 		}
 	)

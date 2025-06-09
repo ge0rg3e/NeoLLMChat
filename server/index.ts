@@ -1,4 +1,5 @@
 import { staticPlugin } from '@elysiajs/static';
+import adminService from './services/admin';
 import authService from './services/auth';
 import chatService from './services/chat';
 import { cors } from '@elysiajs/cors';
@@ -9,11 +10,12 @@ const app = new Elysia()
 	.use(
 		cors({
 			origin: 'http://localhost:8607',
-			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+			methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 			credentials: true
 		})
 	)
 	.use(chatService)
+	.use(adminService)
 	.use(authService)
 	.use(
 		staticPlugin({

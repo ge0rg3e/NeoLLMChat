@@ -9,4 +9,5 @@
 -   [x] Basic output formatting
 -   [x] Authentication
 -   [x] Settings
+-   [x] AI Models Management (Add, Edit, Delete)
 -   [x] Ollama API

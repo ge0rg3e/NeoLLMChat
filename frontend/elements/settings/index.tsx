@@ -1,7 +1,10 @@
-import { PaintBucketIcon, Settings2Icon, XIcon } from 'lucide-react';
+import { Settings2Icon, UserCogIcon, XIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
-import AppearanceTab from './tabs/appearance';
+import Button from '~frontend/components/button';
+import Modal from '~frontend/components/modal';
+import useStore from '~frontend/stores';
 import GeneralTab from './tabs/general';
+import AdminTab from './tabs/admin';
 import { useEffect } from 'react';
 
 const tabs = [
@@ -12,14 +15,15 @@ const tabs = [
 		Content: GeneralTab
 	},
 	{
-		id: 'appearance',
-		label: 'Appearance',
-		icon: PaintBucketIcon,
-		Content: AppearanceTab
+		id: 'admin',
+		label: 'Admin',
+		icon: UserCogIcon,
+		Content: AdminTab
 	}
 ];
 
 const Settings = () => {
+	const { session } = useStore();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const settingsTab = searchParams.get('settings');
@@ -44,25 +48,26 @@ const Settings = () => {
 		document.addEventListener('keydown', handleKeydown);
 	}, []);
 
-	const Content = tabs.find((tab) => tab.id === settingsTab)?.Content;
-	if (!Content) return null;
+	const tab = tabs.find((tab) => tab.id === settingsTab);
 
 	return (
-		<div className="size-screen fixed top-0 left-0 z-50 bg-background/50 backdrop-blur-[2px] flex-center-center">
-			<div className="relative size-full bg-card max-w-[760px] max-h-[550px] rounded-xl animate-in fade-in">
-				{/* Header */}
-				<div className="flex-between-center px-6 py-4">
-					<h1 className="font-medium text-xl">Settings</h1>
+		<Modal clasName="max-w-[760px] min-h-[500px]" open={Boolean(tab)} onOpenChange={(state) => state === false && handleClose()}>
+			{/* Header */}
+			<div className="flex-between-center px-6 py-4">
+				<h1 className="font-medium text-xl">Settings</h1>
 
-					<button className="flex-center-center cursor-pointer transition-smooth hover:opacity-70" title="Close" onClick={handleClose}>
-						<XIcon className="size-5" />
-					</button>
-				</div>
+				<Button variant="ghost" size="sm" title="Close" onClick={handleClose}>
+					<XIcon className="size-5" />
+				</Button>
+			</div>
 
-				<div className="flex flex-row gap-x-3">
-					{/* Tabs */}
-					<div className="size-full max-w-[180px] space-y-1.5 pl-3 pb-3">
-						{tabs.map((tab) => (
+			<div className="flex flex-row gap-x-3">
+				{/* Tabs */}
+				<div className="size-full max-w-[180px] space-y-1.5 pl-3 pb-3">
+					{tabs.map((tab) => {
+						if (tab.id === 'admin' && session?.role !== 'admin') return null;
+
+						return (
 							<button
 								className={`w-full h-9 text-sm rounded-lg px-3 flex-start-center gap-x-2 cursor-pointer transition-smooth hover:bg-accent ${settingsTab === tab.id ? 'bg-accent' : ''}`}
 								onClick={() => handleChangeTab(tab.id)}
@@ -71,13 +76,13 @@ const Settings = () => {
 								{tab.icon && <tab.icon className="size-4.5" />}
 								{tab.label}
 							</button>
-						))}
-					</div>
-
-					<Content />
+						);
+					})}
 				</div>
+
+				{(tab?.id !== 'admin' || session?.role === 'admin') && tab && <tab.Content />}
 			</div>
-		</div>
+		</Modal>
 	);
 };
 

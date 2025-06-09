@@ -27,7 +27,7 @@ const authService = new Elysia({ prefix: '/api/auth' })
 	.post(
 		'/signin',
 		async ({ body, jwt, cookie: { accessToken, refreshToken }, set }) => {
-			const user = await db.query.users.findFirst({ where: eq(users.username, body.username), columns: { id: true, username: true, email: true, password: true } });
+			const user = await db.query.users.findFirst({ where: eq(users.username, body.username), columns: { id: true, username: true, email: true, password: true, role: true } });
 			if (!user) {
 				set.status = 400;
 				return { error: 'The username or password you entered is incorrect' };
@@ -47,7 +47,7 @@ const authService = new Elysia({ prefix: '/api/auth' })
 
 			await db.update(users).set({ refreshToken: refreshJWTToken }).where(eq(users.id, user.id));
 
-			return { session: { username: user.username, id: user.id }, accessToekn: accessJWTToken, refreshToken: refreshJWTToken };
+			return { session: { username: user.username, id: user.id, role: user.role }, accessToekn: accessJWTToken, refreshToken: refreshJWTToken };
 		},
 		{
 			body: t.Object({
