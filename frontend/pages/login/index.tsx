@@ -33,7 +33,7 @@ const Login = () => {
 						<p className="text-muted-foreground text-center font-semibold text-2xl mb-6">Log in to NeoLLMChat.</p>
 
 						<form className="w-full space-y-3.5 flex-col flex-center-center" onSubmit={handleSubmit}>
-							<Input type="text" name="username" placeholder="Your username address" required />
+							<Input type="text" name="username" placeholder="Your username" required />
 							<Input type="password" name="password" placeholder="Your password" required />
 
 							<Button className="mt-3 w-full" type="submit">
