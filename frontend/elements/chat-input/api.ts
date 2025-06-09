@@ -1,5 +1,5 @@
 import apiClient, { parseResponseStream } from '~frontend/lib/api';
-import type { Message } from '~frontend/stores/types';
+import type { Chat, Message } from '~frontend/stores/types';
 import { useNavigate, useParams } from 'react-router';
 import useStore from '~frontend/stores';
 import { v4 as uuid } from 'uuid';
@@ -13,7 +13,8 @@ const useChatApi = () => {
 		const newChatId = uuid();
 		await createChat(newChatId);
 		navigate(`/c/${newChatId}`);
-		return newChatId;
+		// Return the new chat object directly
+		return { id: newChatId, messages: [] };
 	};
 
 	const sendMessage = async () => {
@@ -21,14 +22,20 @@ const useChatApi = () => {
 		if (!input || !selectedModel) return;
 
 		// Get or create chat
-		const targetChatId = chatId || (await createNewChat());
-		const chat = chats.find((c) => c.id === targetChatId);
-		if (!chat) return;
+		let targetChatId: string;
+		let chat = chatId ? chats.find((c) => c.id === chatId) : null;
+
+		if (!chat) {
+			chat = (await createNewChat()) as any as Chat;
+			targetChatId = chat!.id;
+		} else {
+			targetChatId = chatId!;
+		}
 
 		// Add user message
 		const requestId = uuid();
 		const userMessage: Message = { id: requestId, role: 'user', content: input };
-		const updatedMessages: Message[] = [...chat.messages, userMessage];
+		const updatedMessages: Message[] = [...chat!.messages, userMessage];
 
 		updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
 
@@ -70,6 +77,8 @@ const useChatApi = () => {
 	};
 
 	const stopRequest = async () => {
+		if (!chatId) return; // Guard against undefined chatId
+
 		const activeRequest = activeRequests.find((r) => r.chatId === chatId);
 		if (!activeRequest) return;
 
@@ -79,13 +88,15 @@ const useChatApi = () => {
 
 		if (lastMessage?.role === 'assistant') {
 			const updatedContent = `${lastMessage.content}\n\n**Stopped**`;
-			updateChatMessages(chatId!, 'edit', lastMessage.id, { ...lastMessage, content: updatedContent });
+			updateChatMessages(chatId, 'edit', lastMessage.id, { ...lastMessage, content: updatedContent });
 		}
 
 		deleteRequest(activeRequest.requestId);
 	};
 
 	const regenerateMessage = async (messageId: string) => {
+		if (!chatId) return; // Guard against undefined chatId
+
 		try {
 			const chat = chats.find((c) => c.id === chatId);
 			if (!chat || !selectedModel) return;
@@ -98,17 +109,17 @@ const useChatApi = () => {
 			if (!messagesToKeep.length) return;
 
 			// Update chat with truncated message history
-			updateChatMessages(chatId!, 'replace', '', { id: chatId!, messages: messagesToKeep });
+			updateChatMessages(chatId, 'replace', '', { id: chatId, messages: messagesToKeep });
 
 			// Create new request
 			const requestId = uuid();
 			const abortController = new AbortController();
-			createRequest({ requestId, chatId: chatId!, abortController });
+			createRequest({ requestId, chatId, abortController });
 
 			try {
 				const response = await apiClient.chat.post(
 					{
-						chatId: chatId!,
+						chatId,
 						requestId,
 						modelId: selectedModel.id,
 						messages: messagesToKeep
@@ -130,7 +141,7 @@ const useChatApi = () => {
 					if (!chunkData) continue;
 
 					assistantContent += chunkData.content;
-					updateChatMessages(chatId!, 'edit', assistantMessageId, {
+					updateChatMessages(chatId, 'edit', assistantMessageId, {
 						id: assistantMessageId,
 						role: 'assistant',
 						content: assistantContent
