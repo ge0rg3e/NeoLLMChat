@@ -1,40 +1,85 @@
 import { Stream } from '@elysiajs/stream';
+import { chats } from './database/schema';
 import authPlugin from './auth/plugin';
 import Elysia, { t } from 'elysia';
+import { v4 as uuid } from 'uuid';
+import { eq } from 'drizzle-orm';
+import { db } from './database';
 import OpenAI from 'openai';
+
+const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
+
+const PROVIDER_CONFIG: Record<string, { baseURL: string; apiKey: string }> = {
+	ollama: { baseURL: 'http://localhost:11434/v1', apiKey: 'ollama' }
+} as const;
+
+const createProvider = (providerName: string) => {
+	const providerDetails = PROVIDER_CONFIG[providerName] || { baseURL: '', apiKey: '' };
+	return new OpenAI(providerDetails);
+};
+
+const getOrCreateChat = async (chatId: string, userId: string) => {
+	let chat = await db.query.chats.findFirst({ where: eq(chats.id, chatId) });
+	if (!chat) {
+		chat = (await db.insert(chats).values({ id: chatId, title: 'New chat', messages: [], createdBy: userId }).returning())[0];
+	}
+	return chat;
+};
+
+const saveMessages = async (chatId: string, messages: Array<{ id: string; role: 'user' | 'assistant'; content: string }>, newContent: string) => {
+	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content: newContent }];
+	try {
+		await db.update(chats).set({ messages: updatedMessages }).where(eq(chats.id, chatId));
+	} catch (error) {
+		console.error('Error saving messages:', error);
+	}
+};
+
+const closeStream = (stream: any, isStreamClosed: boolean) => {
+	if (isStreamClosed) return false;
+	isStreamClosed = true;
+	try {
+		stream.close();
+	} catch (error: any) {
+		if (error.name !== 'TypeError' || !error.message.includes('Controller is already closed')) {
+			console.error('Stream close error:', error.message);
+		}
+	}
+	return true;
+};
 
 const llmService = new Elysia({ prefix: '/api/llm' })
 	.use(authPlugin)
 	.post(
 		'/chat',
-		({ body, request }) =>
-			new Stream(async (stream) => {
-				let providerDetails = { baseURL: '', apiKey: '' };
-
-				if (body.model.provider === 'ollama') {
-					providerDetails = { baseURL: 'http://localhost:11434/v1', apiKey: 'ollama' };
-				}
-
-				const provider = new OpenAI({ ...providerDetails });
-
-				// Create an AbortController for the AI request
+		async ({ body, request, user }) => {
+			return new Stream(async (stream) => {
 				const abortController = new AbortController();
-				let isStreamClosed = false; // Track stream state
+				let isStreamClosed = false;
+				const aiResponseChunks: string[] = [];
 
-				// Listen for client request cancellation
-				const handleAbort = () => {
-					abortController.abort(); // Cancel the AI request
-					if (!isStreamClosed) {
-						isStreamClosed = true;
-						stream.close(); // Close stream only if not already closed
-					}
+				const handleAbort = async () => {
+					if (isStreamClosed) return;
+					const content = aiResponseChunks.join('') + '\n\n**Stopped**';
+					await saveMessages(body.chatId, body.messages, content);
+					abortController.abort();
+					isStreamClosed = closeStream(stream, isStreamClosed);
 				};
-				request.signal.addEventListener('abort', handleAbort);
+
+				const abortSignal = request.signal;
+				abortSignal.addEventListener('abort', handleAbort, { once: true });
 
 				try {
+					// Fetch or create chat
+					await getOrCreateChat(body.chatId, user.id);
+
+					// Initialize OpenAI provider
+					const provider = createProvider(body.model.provider);
+
+					// Stream AI response
 					const aiResponse = await provider.chat.completions.create(
 						{
-							messages: [{ role: 'system', content: 'You are a helpful assistant that responds in markdown format with code blocks, lists, and clear formatting.' }, ...body.messages],
+							messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...body.messages],
 							model: body.model.id,
 							stream: true
 						},
@@ -42,41 +87,40 @@ const llmService = new Elysia({ prefix: '/api/llm' })
 					);
 
 					for await (const chunk of aiResponse) {
-						if (isStreamClosed || request.signal.aborted) {
-							break; // Exit loop if stream is closed or request is aborted
-						}
+						if (abortSignal.aborted || isStreamClosed) break;
+
+						const content = chunk.choices[0]?.delta.content ?? '';
+						const done = chunk.choices[0]?.finish_reason === 'stop';
+
+						if (content) aiResponseChunks.push(content);
+
 						stream.send({
 							id: body.requestId,
 							role: 'assistant',
-							content: chunk.choices[0].delta.content ?? '',
-							done: chunk.choices[0].finish_reason === 'stop'
+							content,
+							done
 						});
-					}
 
-					if (!isStreamClosed) {
-						isStreamClosed = true;
-						stream.close();
-					}
-				} catch (error: any) {
-					if (error instanceof Error && error.name === 'AbortError') {
-						console.log('AI processing canceled due to client request cancellation');
-					} else {
-						console.error('Error in AI processing:', error);
-						if (!isStreamClosed) {
-							stream.send({ id: body.requestId, error: 'An error occurred during AI processing' });
+						if (done) {
+							await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''));
+							break;
 						}
 					}
+				} catch (error: any) {
+					const isAbortError = error.name === 'AbortError';
+					const errorMessage = isAbortError ? 'AI processing canceled' : error.message || 'AI processing error';
 					if (!isStreamClosed) {
-						isStreamClosed = true;
-						stream.close();
+						stream.send({ id: body.requestId, error: errorMessage });
 					}
 				} finally {
-					// Cleanup abort listener to prevent memory leaks
-					request.signal.removeEventListener('abort', handleAbort);
+					isStreamClosed = closeStream(stream, isStreamClosed);
+					abortSignal.removeEventListener('abort', handleAbort);
 				}
-			}),
+			});
+		},
 		{
 			body: t.Object({
+				chatId: t.String(),
 				requestId: t.String(),
 				messages: t.Array(
 					t.Object({

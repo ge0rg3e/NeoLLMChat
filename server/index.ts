@@ -1,5 +1,6 @@
 import { staticPlugin } from '@elysiajs/static';
 import authService from './services/auth';
+import syncService from './services/sync';
 import llmService from './services/llm';
 import { cors } from '@elysiajs/cors';
 import { Elysia } from 'elysia';
@@ -15,6 +16,7 @@ const app = new Elysia()
 	)
 	.use(llmService)
 	.use(authService)
+	.use(syncService)
 	.use(
 		staticPlugin({
 			assets: join(process.cwd(), 'build/frontend'),

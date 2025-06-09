@@ -13,6 +13,7 @@ interface Store {
 
 	// actions - other
 	init: () => Promise<void>;
+	requestSync: () => Promise<void>;
 
 	// actions - request
 	createRequest: (data: ActiveRequest) => void;
@@ -52,9 +53,26 @@ const useStore = create<Store>()((set) => ({
 		try {
 			const session = await getSession();
 			const chats = await dexieDb.chats.toArray();
-
 			set({ session, chats });
-		} catch (error) {}
+		} catch {}
+	},
+	requestSync: async () => {
+		try {
+			const { data: syncServerData } = await apiClient.sync.get();
+
+			if (syncServerData) {
+				const _chats = syncServerData.chats.map((c) => ({ ...c, createdAt: new Date(c.createdAt!) }));
+
+				await dexieDb.chats.clear();
+				await dexieDb.chats.bulkAdd(_chats);
+
+				set({ chats: _chats });
+
+				console.info('>> NeoLLMChat - App successfully synchronized with server.');
+			}
+		} catch (err) {
+			console.error('>> NeoLLMChat - Failed to synchronize app to server.', err);
+		}
 	},
 
 	// actions - active requests
@@ -71,7 +89,7 @@ const useStore = create<Store>()((set) => ({
 	// actions - chat
 	createChat: (chatId: string) =>
 		set((state) => {
-			return { chats: [...state.chats, { id: chatId, title: 'New Chat', messages: [] }] };
+			return { chats: [...state.chats, { id: chatId, title: 'New Chat', messages: [], createdBy: state.session!.id!, createdAt: new Date() }] };
 		}),
 	updateChat: (chatId: string, data: Partial<Chat>) =>
 		set((state) => {

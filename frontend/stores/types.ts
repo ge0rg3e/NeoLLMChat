@@ -23,6 +23,8 @@ export type Chat = {
 	id: string;
 	title: string;
 	messages: Array<Message>;
+	createdBy: string;
+	createdAt: Date;
 };
 
 export type Message = {

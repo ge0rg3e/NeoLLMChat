@@ -5,31 +5,35 @@ import type { Message } from '~frontend/stores/types';
 import dexieDb from '~frontend/stores/dexieDb';
 import useStore from '~frontend/stores';
 import { v4 as uuid } from 'uuid';
+import { useMemo } from 'react';
 
 const ChatInput = () => {
-	const params = useParams();
+	const { id: chatId } = useParams();
 	const navigate = useNavigate();
-	const location = useLocation();
-	const { model, chats, chatInput, activeRequests, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
+	const { pathname } = useLocation();
+	const { session, model, chats, chatInput, activeRequests, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
 
-	const sendRequestToLLM = async () => {
+	const createNewChat = async () => {
+		const newChatId = uuid();
+		await createChat(newChatId);
+		await dexieDb.chats.add({
+			id: newChatId,
+			title: 'New Chat',
+			messages: [],
+			createdBy: session!.id!,
+			createdAt: new Date()
+		});
+		navigate(`/c/${newChatId}`);
+		return newChatId;
+	};
+
+	const sendMessage = async () => {
 		const input = chatInput.trim();
 		if (!input) return;
 
-		let chatId = params.id;
-
-		// Create new chat if no ID provided
-		if (!chatId) {
-			chatId = uuid();
-
-			createChat(chatId);
-			await dexieDb.chats.add({ id: chatId, title: 'New Chat', messages: [] });
-
-			navigate(`/c/${chatId}`);
-		}
-
-		// Verify chat exists
-		const chat = chats.find((chat) => chat.id === chatId);
+		// Get or create chat
+		const targetChatId = chatId || (await createNewChat());
+		const chat = chats.find((c) => c.id === targetChatId);
 		if (!chat) return;
 
 		// Add user message
@@ -37,76 +41,81 @@ const ChatInput = () => {
 		const userMessage: Message = { id: requestId, role: 'user', content: input };
 		const updatedMessages: Message[] = [...chat.messages, userMessage];
 
-		updateChatMessages(chatId, 'add', userMessage.id, { ...userMessage });
-		await dexieDb.chats.update(chatId, { messages: updatedMessages });
+		updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
+		await dexieDb.chats.update(targetChatId, { messages: updatedMessages });
 
-		// Call API
-		const abortController = new AbortController();
-		createRequest({ requestId: requestId, chatId, abortController, content: '' });
-
-		const response = await apiClient.llm.chat.post({ requestId, model, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
-		if (!response.data) return;
-
-		// Reset chatInput
+		// Reset input
 		useStore.setState({ chatInput: '' });
 
-		// Process streaming response
-		let assistantContent = '';
+		// Send request to LLM
+		const abortController = new AbortController();
+		createRequest({ requestId, chatId: targetChatId, abortController, content: '' });
 
-		const assistantMessageId = uuid();
-		for await (const chunk of response.data as any) {
-			const chunkData = parseResponseStream(chunk);
-			if (!chunkData) continue;
+		try {
+			const response = await apiClient.llm.chat.post({ chatId: targetChatId, requestId, model, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
+			if (!response.data) return;
 
-			assistantContent += chunkData.content;
+			// Process streaming response
+			let assistantContent = '';
+			const assistantMessageId = uuid();
 
-			updateChatMessages(chatId, 'edit', assistantMessageId, { id: assistantMessageId, role: 'assistant', content: assistantContent });
+			for await (const chunk of response.data as any) {
+				const chunkData = parseResponseStream(chunk);
+				if (!chunkData) continue;
 
-			if (chunkData.done) {
-				deleteRequest(requestId);
-				await dexieDb.chats.update(chatId, { messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent }] });
+				assistantContent += chunkData.content;
+				updateChatMessages(targetChatId, 'edit', assistantMessageId, {
+					id: assistantMessageId,
+					role: 'assistant',
+					content: assistantContent
+				});
 
-				assistantContent = '';
+				if (chunkData.done) {
+					await dexieDb.chats.update(targetChatId, {
+						messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent }]
+					});
+					deleteRequest(requestId);
+					break;
+				}
 			}
+		} catch (error: any) {
+			console.error('Chat request failed:', error);
+			deleteRequest(requestId);
 		}
 	};
 
-	const handleSend = async () => {
-		const activeRequest = activeRequests.find((request) => request.chatId === params.id);
-		if (activeRequest) {
-			activeRequest.abortController.abort();
+	const stopRequest = async () => {
+		const activeRequest = activeRequests.find((r) => r.chatId === chatId);
+		if (!activeRequest) return;
 
-			const chat = chats.find((chat) => chat.id === params.id);
-			const message = chat?.messages[chat.messages.length - 1];
+		activeRequest.abortController.abort();
+		const chat = chats.find((c) => c.id === chatId);
+		const lastMessage = chat?.messages[chat.messages.length - 1];
 
-			if (message && message.role === 'assistant') {
-				updateChatMessages(activeRequest.chatId, 'edit', message.id, { ...message, content: message?.content + '\n\n**Stopped**' });
-				await dexieDb.chats.update(activeRequest.chatId, { messages: [...chat?.messages, { id: message.id, role: message.role, content: message.content + '\n\n**Stopped**' }] });
-			}
-
-			deleteRequest(activeRequest.requestId);
-			return;
+		if (lastMessage?.role === 'assistant') {
+			const updatedContent = `${lastMessage.content}\n\n**Stopped**`;
+			updateChatMessages(chatId!, 'edit', lastMessage.id, { ...lastMessage, content: updatedContent });
+			await dexieDb.chats.update(chatId!, { messages: [...chat!.messages.slice(0, -1), { ...lastMessage, content: updatedContent }] });
 		}
 
-		await sendRequestToLLM();
+		deleteRequest(activeRequest.requestId);
 	};
 
-	const getButtonState = () => {
-		const activeRequest = activeRequests.find((request) => request.chatId === params.id);
+	const handleSend = () => (activeRequests.find((r) => r.chatId === chatId) ? stopRequest() : sendMessage());
+
+	const buttonState = useMemo(() => {
+		const activeRequest = activeRequests.find((r) => r.chatId === chatId);
 		if (activeRequest) return { disabled: false, icon: SquareIcon, label: 'Stop' };
 		if (!chatInput.trim()) return { disabled: true, icon: SendHorizontalIcon, label: 'Send' };
-
 		return { disabled: false, icon: SendHorizontalIcon, label: 'Send' };
-	};
-
-	const buttonState = getButtonState();
+	}, [chatId, chatInput, activeRequests]);
 
 	return (
-		<div className={`w-full flex-center-center ${location.pathname.includes('/c') ? 'fixed max-w-[calc(100vw-270px)] bottom-5 right-0' : ''}`}>
-			<div className="size-full max-w-[765px] max-h-[150px] rounded-3xl bg-card/50 p-2 backdrop-blur-xl">
-				<div className="size-full flex-between-center flex-col bg-card/70 rounded-2xl">
+		<div className={`w-full flex items-center justify-center ${pathname.includes('/c') ? 'fixed bottom-5 right-0 max-w-[calc(100vw-270px)]' : ''}`}>
+			<div className="w-full max-w-[765px] max-h-[150px] p-2 rounded-3xl bg-card/50 backdrop-blur-xl">
+				<div className="flex flex-col w-full h-full rounded-2xl bg-card/70">
 					<textarea
-						className="size-full max-h-[85px] p-3 !pb-0 bg-transparent outline-none border-none resize-none text-foreground placeholder:text-muted-foreground rounded-xl"
+						className="w-full h-full p-3 pb-0 bg-transparent border-none outline-none resize-none rounded-xl text-foreground placeholder:text-muted-foreground"
 						onChange={(e) => useStore.setState({ chatInput: e.target.value })}
 						placeholder="Type your prompt here..."
 						onKeyDown={(e) => {
@@ -117,18 +126,16 @@ const ChatInput = () => {
 						}}
 						value={chatInput}
 					/>
-					<div className="w-full flex-between-center px-3 py-2">
-						<div className="flex-start-center">{model.id}</div>
-						<div className="flex-end-center">
-							<button
-								className="size-8 flex-center-center bg-primary hover:bg-primary/80 transition-smooth rounded-lg cursor-pointer disabled:opacity-80 disabled:cursor-default"
-								disabled={buttonState.disabled}
-								title={buttonState.label}
-								onClick={handleSend}
-							>
-								<buttonState.icon className="size-4 text-card" />
-							</button>
-						</div>
+					<div className="flex items-center justify-between w-full px-4 py-2">
+						<span className="text-sm text-muted-foreground">{model.id}</span>
+						<button
+							className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary hover:bg-primary/80 transition-colors text-card disabled:bg-gray-400 disabled:cursor-not-allowed"
+							disabled={buttonState.disabled}
+							title={buttonState.label}
+							onClick={handleSend}
+						>
+							<buttonState.icon className="w-4 h-4" />
+						</button>
 					</div>
 				</div>
 			</div>

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router';
 import apiClient from '~frontend/lib/api';
 import { LogOutIcon } from 'lucide-react';
 import useStore from '~frontend/stores';
+import dexieDb from '~frontend/stores/dexieDb';
 
 const SideBar = () => {
 	const location = useLocation();
@@ -10,6 +11,7 @@ const SideBar = () => {
 	const handleLogout = async () => {
 		try {
 			await apiClient.auth.logout.post();
+			await dexieDb.delete();
 			useStore.setState({ session: null });
 		} catch {}
 	};

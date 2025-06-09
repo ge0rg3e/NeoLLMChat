@@ -6,8 +6,8 @@ import useStore from './stores';
 // Pages
 import SignIn from './pages/signin';
 import Setup from './pages/setup';
-import Home from './pages/home';
 import Chat from './pages/chat';
+import Home from './pages/home';
 
 // Style
 import './globals.css';
@@ -32,10 +32,11 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-	const { init } = useStore();
+	const { init, requestSync } = useStore();
 
 	useEffect(() => {
 		init();
+		requestSync();
 	}, []);
 
 	return <RouterProvider router={router} />;
