@@ -21,6 +21,9 @@ const GeneralTab = () => {
 
 	const handleDeleteChats = async () => {
 		try {
+			const yes = window.confirm('Are you sure you want to delete all your chats?');
+			if (!yes) return;
+
 			useStore.setState({ chats: [] });
 			await apiClient.chats.delete();
 			navigate('/');

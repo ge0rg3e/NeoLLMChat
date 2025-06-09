@@ -4,7 +4,6 @@ export type ActiveRequest = {
 	abortController: AbortController;
 	requestId: string;
 	chatId: string;
-	content: string;
 };
 
 export type Session =

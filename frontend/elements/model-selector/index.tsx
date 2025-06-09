@@ -1,5 +1,6 @@
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
 import { ChevronsUpDownIcon } from 'lucide-react';
+import { twMerge } from '~frontend/lib/utils';
 import useStore from '~frontend/stores';
 
 interface Props {
@@ -32,14 +33,18 @@ const ModelSelector = ({ orientation = 'bottom' }: Props) => {
 				</ListboxButton>
 
 				<ListboxOptions
-					className={`absolute z-10 w-full overflow-auto outline-none rounded-md bg-card py-1 shadow-sm border data-leave:transition data-leave:duration-100 data-leave:ease-in data-closed:data-leave:opacity-0 ${getOrientationClasses()}`}
+					className={twMerge(
+						'absolute z-10 w-full overflow-auto outline-none rounded-md bg-card py-1 shadow-sm border data-leave:transition data-leave:duration-100 data-leave:ease-in data-closed:data-leave:opacity-0',
+						getOrientationClasses()
+					)}
 					transition
 				>
 					{models.map((model) => (
 						<ListboxOption
-							className={`group relative cursor-pointer py-2 px-3 flex-between-center transition-smooth data-focus:bg-primary/10 ${
-								selectedModel?.id === model.id ? 'bg-primary/10' : ''
-							}`}
+							className={twMerge(
+								'group relative cursor-pointer py-2 px-3 flex-between-center transition-smooth data-focus:bg-primary/10',
+								selectedModel?.id === model.id && 'bg-primary/10'
+							)}
 							value={model}
 							key={model.id}
 						>

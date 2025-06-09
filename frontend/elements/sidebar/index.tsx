@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router';
+import { twMerge } from '~frontend/lib/utils';
 import { Trash2Icon } from 'lucide-react';
 import apiClient from '~frontend/lib/api';
 import useStore from '~frontend/stores';
@@ -31,7 +32,7 @@ const SideBar = () => {
 				<div className="space-y-0.5">
 					{chats.map((chat) => (
 						<Link
-							className={`relative group w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent ${location.pathname === `/c/${chat.id}` ? 'bg-accent' : ''}`}
+							className={twMerge('relative group w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent', location.pathname === `/c/${chat.id}` && 'bg-accent')}
 							to={`/c/${chat.id}`}
 							key={chat.id}
 						>

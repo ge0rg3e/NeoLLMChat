@@ -2,8 +2,9 @@ import { Settings2Icon, UserCogIcon, XIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import Button from '~frontend/components/button';
 import Modal from '~frontend/components/modal';
-import useStore from '~frontend/stores';
+import { twMerge } from '~frontend/lib/utils';
 import GeneralTab from './tabs/general';
+import useStore from '~frontend/stores';
 import AdminTab from './tabs/admin';
 import { useEffect } from 'react';
 
@@ -69,7 +70,10 @@ const Settings = () => {
 
 						return (
 							<button
-								className={`w-full h-9 text-sm rounded-lg px-3 flex-start-center gap-x-2 cursor-pointer transition-smooth hover:bg-accent ${settingsTab === tab.id ? 'bg-accent' : ''}`}
+								className={twMerge(
+									'w-full h-9 text-sm rounded-lg px-3 flex-start-center gap-x-2 cursor-pointer transition-smooth hover:bg-accent',
+									settingsTab === tab.id && 'bg-accent'
+								)}
 								onClick={() => handleChangeTab(tab.id)}
 								key={tab.id}
 							>

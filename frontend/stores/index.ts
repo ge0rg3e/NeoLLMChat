@@ -22,7 +22,7 @@ interface Store {
 	// actions - chat
 	createChat: (chatId: string) => void;
 	updateChat: (chatId: string, data: Partial<Chat>) => void;
-	updateChatMessages: (chatId: string, action: 'add' | 'edit' | 'delete', messageId: string, data: Partial<Message>) => void;
+	updateChatMessages: (chatId: string, action: 'add' | 'edit' | 'delete' | 'replace', messageId: string, data: Partial<Message> | { id: string; messages: Message[] }) => void;
 	deleteChat: (chatId: string) => void;
 }
 
@@ -85,7 +85,7 @@ const useStore = create<Store>()((set) => ({
 			const newChats = state.chats.map((chat) => (chat.id === chatId ? newChat : chat));
 			return { chats: newChats };
 		}),
-	updateChatMessages: (chatId: string, action: 'add' | 'edit' | 'delete', messageId: string, data: Partial<Message>) =>
+	updateChatMessages: (chatId: string, action: 'add' | 'edit' | 'delete' | 'replace', messageId: string, data: Partial<Message> | { id: string; messages: Message[] }) =>
 		set((state) => {
 			const chat = state.chats.find((chat) => chat.id === chatId);
 			if (!chat) return state;
@@ -94,9 +94,11 @@ const useStore = create<Store>()((set) => ({
 
 			switch (action) {
 				case 'add':
+					if ('messages' in data) return state; // Type guard to ensure data is Partial<Message>
 					newChat.messages = [...newChat.messages, { id: messageId, role: data.role || 'user', content: data.content || '', ...data }];
 					break;
 				case 'edit':
+					if ('messages' in data) return state; // Type guard to ensure data is Partial<Message>
 					const existingMessage = newChat.messages.find((message) => message.id === messageId);
 					if (existingMessage) {
 						newChat.messages = newChat.messages.map((message) => (message.id === messageId ? { ...message, ...data } : message));
@@ -105,7 +107,13 @@ const useStore = create<Store>()((set) => ({
 					}
 					break;
 				case 'delete':
+					if ('messages' in data) return state; // Type guard to ensure data is Partial<Message>
 					newChat.messages = newChat.messages.filter((message) => message.id !== messageId);
+					break;
+				case 'replace':
+					if ('messages' in data) {
+						newChat.messages = data.messages;
+					}
 					break;
 			}
 
