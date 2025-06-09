@@ -1,3 +1,5 @@
+export type Theme = 'dark' | 'light';
+
 export type ActiveRequest = {
 	abortController: AbortController;
 	requestId: string;

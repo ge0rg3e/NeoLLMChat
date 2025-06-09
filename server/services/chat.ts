@@ -3,7 +3,7 @@ import { chats } from './database/schema';
 import authPlugin from './auth/plugin';
 import Elysia, { t } from 'elysia';
 import { v4 as uuid } from 'uuid';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from './database';
 import OpenAI from 'openai';
 
@@ -48,7 +48,7 @@ const closeStream = (stream: any, isStreamClosed: boolean) => {
 	return true;
 };
 
-const llmService = new Elysia({ prefix: '/api/llm' })
+const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
 	.post(
 		'/chat',
@@ -137,6 +137,25 @@ const llmService = new Elysia({ prefix: '/api/llm' })
 			})
 		}
 	)
-	.get('/models', () => []);
+	.delete(
+		'/chat',
+		async ({ body, user }) => {
+			await db.delete(chats).where(and(eq(chats.id, body.id), eq(chats.createdBy, user.id)));
+			return { success: true };
+		},
+		{
+			body: t.Object({
+				id: t.String()
+			})
+		}
+	)
+	.get('/chats', async ({ user }) => {
+		const userChats = await db.query.chats.findMany({ where: eq(chats.createdBy, user.id) });
+		return userChats;
+	})
+	.delete('/chats', async ({ user }) => {
+		await db.delete(chats).where(eq(chats.createdBy, user.id));
+		return { success: true };
+	});
 
-export default llmService;
+export default chatService;

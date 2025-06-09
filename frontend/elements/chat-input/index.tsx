@@ -2,34 +2,27 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import apiClient, { parseResponseStream } from '~frontend/lib/api';
 import { SendHorizontalIcon, SquareIcon } from 'lucide-react';
 import type { Message } from '~frontend/stores/types';
-import dexieDb from '~frontend/stores/dexieDb';
+import ModelSelector from '../model-selector';
 import useStore from '~frontend/stores';
 import { v4 as uuid } from 'uuid';
 import { useMemo } from 'react';
 
 const ChatInput = () => {
-	const { id: chatId } = useParams();
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
-	const { session, model, chats, chatInput, activeRequests, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
+	const { id: chatId } = useParams();
+	const { selectedModel, chats, chatInput, activeRequests, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
 
 	const createNewChat = async () => {
 		const newChatId = uuid();
 		await createChat(newChatId);
-		await dexieDb.chats.add({
-			id: newChatId,
-			title: 'New Chat',
-			messages: [],
-			createdBy: session!.id!,
-			createdAt: new Date()
-		});
 		navigate(`/c/${newChatId}`);
 		return newChatId;
 	};
 
 	const sendMessage = async () => {
 		const input = chatInput.trim();
-		if (!input) return;
+		if (!input || !selectedModel) return;
 
 		// Get or create chat
 		const targetChatId = chatId || (await createNewChat());
@@ -42,7 +35,6 @@ const ChatInput = () => {
 		const updatedMessages: Message[] = [...chat.messages, userMessage];
 
 		updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
-		await dexieDb.chats.update(targetChatId, { messages: updatedMessages });
 
 		// Reset input
 		useStore.setState({ chatInput: '' });
@@ -52,7 +44,7 @@ const ChatInput = () => {
 		createRequest({ requestId, chatId: targetChatId, abortController, content: '' });
 
 		try {
-			const response = await apiClient.llm.chat.post({ chatId: targetChatId, requestId, model, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
+			const response = await apiClient.chat.post({ chatId: targetChatId, requestId, model: selectedModel, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
 			if (!response.data) return;
 
 			// Process streaming response
@@ -71,15 +63,12 @@ const ChatInput = () => {
 				});
 
 				if (chunkData.done) {
-					await dexieDb.chats.update(targetChatId, {
-						messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent }]
-					});
 					deleteRequest(requestId);
 					break;
 				}
 			}
-		} catch (error: any) {
-			console.error('Chat request failed:', error);
+		} catch (err) {
+			console.error('>> NeoLLMChat - Failed to send chat request.', err);
 			deleteRequest(requestId);
 		}
 	};
@@ -95,7 +84,6 @@ const ChatInput = () => {
 		if (lastMessage?.role === 'assistant') {
 			const updatedContent = `${lastMessage.content}\n\n**Stopped**`;
 			updateChatMessages(chatId!, 'edit', lastMessage.id, { ...lastMessage, content: updatedContent });
-			await dexieDb.chats.update(chatId!, { messages: [...chat!.messages.slice(0, -1), { ...lastMessage, content: updatedContent }] });
 		}
 
 		deleteRequest(activeRequest.requestId);
@@ -127,9 +115,9 @@ const ChatInput = () => {
 						value={chatInput}
 					/>
 					<div className="flex items-center justify-between w-full px-4 py-2">
-						<span className="text-sm text-muted-foreground">{model.id}</span>
+						<ModelSelector />
 						<button
-							className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary hover:bg-primary/80 transition-colors text-card disabled:bg-gray-400 disabled:cursor-not-allowed"
+							className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary hover:bg-primary/80 transition-colors text-card disabled:bg-primary/60 disabled:cursor-not-allowed"
 							disabled={buttonState.disabled}
 							title={buttonState.label}
 							onClick={handleSend}

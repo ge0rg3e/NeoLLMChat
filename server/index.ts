@@ -1,7 +1,6 @@
 import { staticPlugin } from '@elysiajs/static';
 import authService from './services/auth';
-import syncService from './services/sync';
-import llmService from './services/llm';
+import chatService from './services/chat';
 import { cors } from '@elysiajs/cors';
 import { Elysia } from 'elysia';
 import { join } from 'path';
@@ -10,13 +9,12 @@ const app = new Elysia()
 	.use(
 		cors({
 			origin: 'http://localhost:8607',
-			methods: '*',
+			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 			credentials: true
 		})
 	)
-	.use(llmService)
+	.use(chatService)
 	.use(authService)
-	.use(syncService)
 	.use(
 		staticPlugin({
 			assets: join(process.cwd(), 'build/frontend'),

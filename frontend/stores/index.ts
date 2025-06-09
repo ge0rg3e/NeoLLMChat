@@ -1,19 +1,19 @@
-import type { ActiveRequest, Chat, Message, Model, Session } from './types';
+import type { ActiveRequest, Chat, Message, Model, Session, Theme } from './types';
 import apiClient from '~frontend/lib/api';
 import { create } from 'zustand';
-import dexieDb from './dexieDb';
 
 interface Store {
 	// states
 	activeRequests: Array<ActiveRequest>;
+	selectedModel: Model | null;
+	models: Array<Model>;
 	chats: Array<Chat>;
 	chatInput: string;
 	session: Session;
-	model: Model;
+	theme: Theme;
 
 	// actions - other
 	init: () => Promise<void>;
-	requestSync: () => Promise<void>;
 
 	// actions - request
 	createRequest: (data: ActiveRequest) => void;
@@ -39,39 +39,32 @@ const getSession = async () => {
 const useStore = create<Store>()((set) => ({
 	// states
 	session: undefined,
+	selectedModel: null,
 	activeRequests: [],
 	chatInput: '',
+	theme: 'dark',
+	models: [],
 	chats: [],
-	model: {
-		id: 'llama3.2',
-		provider: 'ollama',
-		params: {}
-	},
 
 	// actions - other
 	init: async () => {
 		try {
 			const session = await getSession();
-			const chats = await dexieDb.chats.toArray();
-			set({ session, chats });
-		} catch {}
-	},
-	requestSync: async () => {
-		try {
-			const { data: syncServerData } = await apiClient.sync.get();
+			const chats = await apiClient.chats.get();
+			const theme = (localStorage.getItem('theme') as Theme) ?? 'dark';
 
-			if (syncServerData) {
-				const _chats = syncServerData.chats.map((c) => ({ ...c, createdAt: new Date(c.createdAt!) }));
+			const models = [
+				{
+					id: 'llama3.2',
+					provider: 'ollama',
+					params: {}
+				}
+			];
+			const selectedModel = models[0];
 
-				await dexieDb.chats.clear();
-				await dexieDb.chats.bulkAdd(_chats);
-
-				set({ chats: _chats });
-
-				console.info('>> NeoLLMChat - App successfully synchronized with server.');
-			}
+			set({ session, chats: chats.data as any as Chat[], theme, models, selectedModel });
 		} catch (err) {
-			console.error('>> NeoLLMChat - Failed to synchronize app to server.', err);
+			console.error('>> NeoLLMChat - Failed initialize store data.', err);
 		}
 	},
 

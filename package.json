@@ -17,9 +17,9 @@
 		"@elysiajs/static": "^1.3.0",
 		"@elysiajs/stream": "^1.1.0",
 		"@fontsource/geist": "^5.2.6",
+		"@headlessui/react": "^2.2.4",
 		"@tailwindcss/vite": "^4.1.8",
 		"better-sqlite3": "^11.10.0",
-		"dexie": "^4.0.11",
 		"dompurify": "^3.2.6",
 		"drizzle-orm": "^0.44.2",
 		"elysia": "^1.3.4",
@@ -35,13 +35,14 @@
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.15",
-		"bun-types": "latest",
-		"drizzle-kit": "^0.31.1",
-		"vite": "^6.3.5",
 		"@types/react": "^19.1.2",
 		"@types/react-dom": "^19.1.2",
 		"@vitejs/plugin-react": "^4.4.1",
+		"bun-types": "latest",
+		"drizzle-kit": "^0.31.1",
 		"eslint": "^9.25.0",
-		"eslint-plugin-react-refresh": "^0.4.19"
+		"eslint-plugin-react-refresh": "^0.4.19",
+		"tw-animate-css": "^1.3.4",
+		"vite": "^6.3.5"
 	}
 }

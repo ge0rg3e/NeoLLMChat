@@ -32,11 +32,10 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-	const { init, requestSync } = useStore();
+	const { init } = useStore();
 
 	useEffect(() => {
 		init();
-		requestSync();
 	}, []);
 
 	return <RouterProvider router={router} />;

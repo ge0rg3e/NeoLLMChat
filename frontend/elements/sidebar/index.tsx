@@ -1,19 +1,21 @@
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { Trash2Icon } from 'lucide-react';
 import apiClient from '~frontend/lib/api';
-import { LogOutIcon } from 'lucide-react';
 import useStore from '~frontend/stores';
-import dexieDb from '~frontend/stores/dexieDb';
 
 const SideBar = () => {
+	const navigate = useNavigate();
 	const location = useLocation();
-	const { chats, session } = useStore();
+	const { chats, session, deleteChat } = useStore();
 
-	const handleLogout = async () => {
+	const handleDeleteChat = async (chatId: string) => {
 		try {
-			await apiClient.auth.logout.post();
-			await dexieDb.delete();
-			useStore.setState({ session: null });
-		} catch {}
+			await deleteChat(chatId);
+			await apiClient.chat.delete({ id: chatId });
+			navigate('/');
+		} catch (err) {
+			console.error('>> NeoLLMChat - Failed to delete chat.', err);
+		}
 	};
 
 	return (
@@ -29,25 +31,40 @@ const SideBar = () => {
 				<div className="space-y-0.5">
 					{chats.map((chat) => (
 						<Link
-							className={`w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent ${location.pathname === `/c/${chat.id}` ? 'bg-accent' : ''}`}
+							className={`relative group w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent ${location.pathname === `/c/${chat.id}` ? 'bg-accent' : ''}`}
 							to={`/c/${chat.id}`}
 							key={chat.id}
 						>
+							{/* Title */}
 							<span className="text-sm text-foreground">{chat.title}</span>
+
+							{/* Actions */}
+							<div className="absolute flex-center-center right-3.5 transition-smooth opacity-0 group-hover:opacity-100">
+								<button className="flex-center-center cursor-pointer transition-smooth hover:text-destructive" title="Delete" onClick={() => handleDeleteChat(chat.id)}>
+									<Trash2Icon className="size-4" />
+								</button>
+							</div>
 						</Link>
 					))}
+
+					{chats.length === 0 && <p className="text-center text-sm text-muted-foreground">No chat history...</p>}
 				</div>
 			</div>
 
 			{/* Bottom */}
 			<div className="w-full">
 				{/* Account */}
-				<button className="flex-between-center w-full h-9 px-3.5 bg-accent rounded-lg">
-					<span>{session?.username}</span>
-					<button className="flex-center-center cursor-pointer hover:text-destructive" onClick={handleLogout}>
-						<LogOutIcon className="size-4.5" />
-					</button>
-				</button>
+				{session && (
+					<Link className="w-full h-9 px-3.5 flex-start-center gap-x-2 rounded-lg transition-smooth hover:bg-accent" to="?settings=general">
+						{/* Avatar */}
+						<div className="size-7 flex-center-center bg-accent rounded-full select-none">
+							<span className="text-muted-foreground">{session?.username[0]}</span>
+						</div>
+
+						{/* Info */}
+						<div className="text-sm">{session?.username}</div>
+					</Link>
+				)}
 			</div>
 		</aside>
 	);
