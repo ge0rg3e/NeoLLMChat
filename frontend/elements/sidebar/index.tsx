@@ -3,6 +3,7 @@ import { twMerge } from '~frontend/lib/utils';
 import { Trash2Icon } from 'lucide-react';
 import apiClient from '~frontend/lib/api';
 import useStore from '~frontend/stores';
+import { toast } from 'sonner';
 
 const SideBar = () => {
 	const navigate = useNavigate();
@@ -10,13 +11,12 @@ const SideBar = () => {
 	const { chats, session, deleteChat } = useStore();
 
 	const handleDeleteChat = async (chatId: string) => {
-		try {
-			await deleteChat(chatId);
-			await apiClient.chat.delete({ id: chatId });
-			navigate('/');
-		} catch (err) {
-			console.error('>> NeoLLMChat - Failed to delete chat.', err);
-		}
+		await deleteChat(chatId);
+		const { error } = await apiClient.chat.delete({ id: chatId });
+		if (error) return toast.error((error.value as any).error);
+
+		toast.success('You have successfully deleted this chat.');
+		navigate('/');
 	};
 
 	return (

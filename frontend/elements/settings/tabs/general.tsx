@@ -1,10 +1,11 @@
 import Button from '~frontend/components/button';
-import { useNavigate } from 'react-router';
-import useTheme from '~frontend/lib/theme';
-import apiClient from '~frontend/lib/api';
-import useStore from '~frontend/stores';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { twMerge } from '~frontend/lib/utils';
+import useTheme from '~frontend/lib/theme';
+import { useNavigate } from 'react-router';
+import apiClient from '~frontend/lib/api';
+import useStore from '~frontend/stores';
+import { toast } from 'sonner';
 
 const GeneralTab = () => {
 	const { theme, setTheme } = useTheme();
@@ -12,24 +13,22 @@ const GeneralTab = () => {
 	const { session } = useStore();
 
 	const handleLogout = async () => {
-		try {
-			await apiClient.auth.logout.post();
-			useStore.setState({ session: null });
-			navigate('/signin');
-		} catch {}
+		await apiClient.auth.logout.post();
+		useStore.setState({ session: null });
+		toast.success('You have successfully logged out.');
+		navigate('/login');
 	};
 
 	const handleDeleteChats = async () => {
-		try {
-			const yes = window.confirm('Are you sure you want to delete all your chats?');
-			if (!yes) return;
+		const yes = window.confirm('Are you sure you want to delete all your chats?');
+		if (!yes) return;
 
-			useStore.setState({ chats: [] });
-			await apiClient.chats.delete();
-			navigate('/');
-		} catch (err) {
-			console.error('>> NeoLLMChat - Failed to delete chats.', err);
-		}
+		useStore.setState({ chats: [] });
+		const { error } = await apiClient.chats.delete();
+		if (error) return toast.error((error.value as any).error);
+
+		toast.success('You have successfully deleted all your chats.');
+		navigate('/');
 	};
 
 	if (!session) return null;

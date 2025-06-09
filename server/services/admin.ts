@@ -8,16 +8,22 @@ import { eq } from 'drizzle-orm';
 
 const adminService = new Elysia({ prefix: '/api/admin' })
 	.use(authPlugin)
-	.get('/users', async ({ user }) => {
-		if (user.role !== 'admin') return { error: 'Unauthorized' };
+	.get('/users', async ({ user, set }) => {
+		if (user.role !== 'admin') {
+			set.status = 401;
+			return { error: 'Admin role is required.' };
+		}
 
 		const users = await db.query.users.findMany({ columns: { id: true, username: true, role: true } });
 		return { data: users };
 	})
 	.post(
 		'/models',
-		async ({ body, user }) => {
-			if (user.role !== 'admin') return { error: 'Unauthorized' };
+		async ({ body, user, set }) => {
+			if (user.role !== 'admin') {
+				set.status = 401;
+				return { error: 'Admin role is required.' };
+			}
 
 			const ecryptedApiKey = (await encrypt(body.apiKey)) as string;
 
@@ -46,8 +52,11 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 	)
 	.patch(
 		'/models',
-		async ({ body, user }) => {
-			if (user.role !== 'admin') return { error: 'Unauthorized' };
+		async ({ body, user, set }) => {
+			if (user.role !== 'admin') {
+				set.status = 401;
+				return { error: 'Admin role is required.' };
+			}
 
 			let updatedData: any = {};
 
@@ -87,8 +96,11 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 	)
 	.delete(
 		'/models',
-		async ({ body, user }) => {
-			if (user.role !== 'admin') return { error: 'Unauthorized' };
+		async ({ body, user, set }) => {
+			if (user.role !== 'admin') {
+				set.status = 401;
+				return { error: 'Admin role is required.' };
+			}
 
 			await db.delete(models).where(eq(models.id, body.id));
 			return { data: true };

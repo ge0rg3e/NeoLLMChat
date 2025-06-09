@@ -141,9 +141,14 @@ const chatService = new Elysia({ prefix: '/api' })
 	)
 	.delete(
 		'/chat',
-		async ({ body, user }) => {
-			await db.delete(chats).where(and(eq(chats.id, body.id), eq(chats.createdBy, user.id)));
-			return { success: true };
+		async ({ body, user, set }) => {
+			try {
+				await db.delete(chats).where(and(eq(chats.id, body.id), eq(chats.createdBy, user.id)));
+				return { data: true };
+			} catch {
+				set.status = 500;
+				return { error: 'Failed to delete chat.' };
+			}
 		},
 		{
 			body: t.Object({
@@ -155,9 +160,14 @@ const chatService = new Elysia({ prefix: '/api' })
 		const userChats = await db.query.chats.findMany({ where: eq(chats.createdBy, user.id) });
 		return userChats;
 	})
-	.delete('/chats', async ({ user }) => {
-		await db.delete(chats).where(eq(chats.createdBy, user.id));
-		return { success: true };
+	.delete('/chats', async ({ user, set }) => {
+		try {
+			await db.delete(chats).where(eq(chats.createdBy, user.id));
+			return { data: true };
+		} catch {
+			set.status = 500;
+			return { error: 'Failed to delete chats.' };
+		}
 	});
 
 export default chatService;

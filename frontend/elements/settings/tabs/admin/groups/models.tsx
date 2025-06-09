@@ -5,6 +5,7 @@ import Modal from '~frontend/components/modal';
 import { Fragment, useState } from 'react';
 import apiClient from '~frontend/lib/api';
 import useStore from '~frontend/stores';
+import { toast } from 'sonner';
 
 const Models = () => {
 	const { models } = useStore();
@@ -19,13 +20,12 @@ const Models = () => {
 		const apiUrl = form.apiUrl.value;
 		const apiKey = form.apiKey.value;
 
-		const { data: newModel } = await apiClient.admin.models.post({ model, provider, apiUrl, apiKey });
-		if (newModel?.error) return console.error('>> NeoLLMChat - Error adding model.', newModel.error);
+		const { data, error } = await apiClient.admin.models.post({ model, provider, apiUrl, apiKey });
+		if (error) return toast.error((error.value as any).error);
 
-		if (newModel?.data) {
-			setShowModal(null);
-			useStore.setState({ models: [...models, newModel.data] });
-		}
+		setShowModal(null);
+		useStore.setState({ models: [...models, data.data!] });
+		toast.success('You have successfully added a new model.');
 	};
 
 	const handleEditModel = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,26 +38,24 @@ const Models = () => {
 		const apiUrl = form.apiUrl.value;
 		const apiKey = form.apiKey.value;
 
-		const { data: updatedModel } = await apiClient.admin.models.patch({ id: showModal.payload?.id, model, provider, apiUrl, apiKey });
-		if (updatedModel?.error) return console.error('>> NeoLLMChat - Error editing model.', updatedModel.error);
+		const { data, error } = await apiClient.admin.models.patch({ id: showModal.payload?.id, model, provider, apiUrl, apiKey });
+		if (error) return toast.error((error.value as any).error);
 
-		if (updatedModel?.data) {
-			setShowModal(null);
-			useStore.setState({ models: models.map((m) => (m.id === updatedModel.data.id ? updatedModel.data : m)) });
-		}
+		setShowModal(null);
+		useStore.setState({ models: models.map((m) => (m.id === data.data!.id ? data.data! : m)) });
+		toast.success('You have successfully updated this model.');
 	};
 
 	const handleDeleteModel = async (id: string) => {
 		const yes = window.confirm('Are you sure you want to delete this model?');
 		if (!yes) return;
 
-		const { data: deletedModel } = await apiClient.admin.models.delete({ id });
-		if (deletedModel?.error) return console.error('>> NeoLLMChat - Error deleting model.', deletedModel.error);
+		const { error } = await apiClient.admin.models.delete({ id });
+		if (error) return toast.error((error.value as any).error);
 
-		if (deletedModel?.data === true) {
-			setShowModal(null);
-			useStore.setState({ models: models.filter((m) => m.id !== id) });
-		}
+		setShowModal(null);
+		useStore.setState({ models: models.filter((m) => m.id !== id) });
+		toast.success('You have successfully deleted this model.');
 	};
 
 	return (

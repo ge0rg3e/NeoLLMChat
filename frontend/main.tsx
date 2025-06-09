@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import useStore from './stores';
 
 // Pages
-import SignIn from './pages/signin';
-import Setup from './pages/setup';
+import Register from './pages/register';
+import Login from './pages/login';
 import Chat from './pages/chat';
 import Home from './pages/home';
 
@@ -22,12 +22,12 @@ const router = createBrowserRouter([
 		element: <Chat />
 	},
 	{
-		path: '/signin',
-		element: <SignIn />
+		path: '/login',
+		element: <Login />
 	},
 	{
-		path: '/setup',
-		element: <Setup />
+		path: '/register',
+		element: <Register />
 	}
 ]);
 

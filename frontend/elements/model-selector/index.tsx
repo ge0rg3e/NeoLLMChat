@@ -28,7 +28,7 @@ const ModelSelector = ({ orientation = 'bottom' }: Props) => {
 		<Listbox value={selectedModel} onChange={(model) => useStore.setState({ selectedModel: model })}>
 			<div className="relative w-fit">
 				<ListboxButton className="grid w-full grid-cols-1 rounded-lg py-2 px-3 flex-center-center gap-x-2 outline-none border-none transition-smooth hover:bg-accent/30 data-active:bg-accent/30 cursor-pointer">
-					<span className="text-sm">{selectedModel?.model}</span>
+					<span className="text-sm">{models.length ? selectedModel?.model ?? 'Select a model' : 'No models available'}</span>
 					<ChevronsUpDownIcon className="text-muted-foreground size-3.5" />
 				</ListboxButton>
 

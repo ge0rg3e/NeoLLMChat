@@ -1,0 +1,53 @@
+import Button from '~frontend/components/button';
+import Input from '~frontend/components/input';
+import Layout from '~frontend/elements/layout';
+import { useNavigate } from 'react-router';
+import apiClient from '~frontend/lib/api';
+import useStore from '~frontend/stores';
+import { toast } from 'sonner';
+
+const Login = () => {
+	const navigate = useNavigate();
+
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+
+		const form = e.currentTarget as HTMLFormElement;
+		const username = form.username.value;
+		const password = form.password.value;
+
+		const { data, error } = await apiClient.auth.login.post({ username, password });
+		if (error) return toast.error((error.value as any).error);
+
+		useStore.setState({ session: data.session as any });
+		toast.success('You have successfully logged in.');
+		navigate('/');
+	};
+
+	return (
+		<Layout className="size-screen flex-center-center">
+			<div className="size-full grid grid-cols-1 lg:grid-cols-2">
+				{/* Left */}
+				<div className="size-full flex-col flex-center-center">
+					<div className="w-full max-w-[385px]">
+						<p className="text-muted-foreground text-center font-semibold text-2xl mb-6">Log in to NeoLLMChat.</p>
+
+						<form className="w-full space-y-3.5 flex-col flex-center-center" onSubmit={handleSubmit}>
+							<Input type="text" name="username" placeholder="Your username address" required />
+							<Input type="password" name="password" placeholder="Your password" required />
+
+							<Button className="mt-3 w-full" type="submit">
+								Log in
+							</Button>
+						</form>
+					</div>
+				</div>
+
+				{/* Right */}
+				<div className="size-full hidden lg:flex flex-col flex-center-center bg-muted bg-cover bg-center bg-no-repeat bg-[url('/images/auth-bg.png')]"></div>
+			</div>
+		</Layout>
+	);
+};
+
+export default Login;

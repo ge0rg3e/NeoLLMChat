@@ -25,18 +25,18 @@ const authService = new Elysia({ prefix: '/api/auth' })
 		})
 	)
 	.post(
-		'/signin',
+		'/login',
 		async ({ body, jwt, cookie: { accessToken, refreshToken }, set }) => {
 			const user = await db.query.users.findFirst({ where: eq(users.username, body.username), columns: { id: true, username: true, email: true, password: true, role: true } });
 			if (!user) {
 				set.status = 400;
-				return { error: 'The username or password you entered is incorrect' };
+				return { error: 'The username or password is incorrect.' };
 			}
 
 			const matchPassword = await Bun.password.verify(body.password, user.password, 'bcrypt');
 			if (!matchPassword) {
 				set.status = 400;
-				return { error: 'The username or password you entered is incorrect' };
+				return { error: 'The username or password is incorrect.' };
 			}
 
 			const accessJWTToken = await jwt.sign({ sub: user.id, exp: getExpTimestamp(ACCESS_TOKEN_EXP) });
@@ -57,7 +57,7 @@ const authService = new Elysia({ prefix: '/api/auth' })
 		}
 	)
 	.post(
-		'/setup',
+		'/register',
 		async ({ body }) => {
 			const password = await Bun.password.hash(body.password, {
 				algorithm: 'bcrypt',
