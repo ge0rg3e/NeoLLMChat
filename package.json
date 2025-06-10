@@ -4,18 +4,12 @@
 	"author": "Ge0rg3e",
 	"module": "src/index.js",
 	"scripts": {
-		"db:generate": "bunx drizzle-kit generate",
-		"dev": "bun run --watch server/index.ts",
-		"db:studio": "bunx drizzle-kit studio",
-		"db:push": "bunx drizzle-kit push",
-		"frontend:build": "vite build",
-		"frontend:dev": "vite"
+		"dev": "bun run --watch server/index.ts"
 	},
 	"dependencies": {
 		"@elysiajs/cors": "^1.3.3",
 		"@elysiajs/eden": "^1.3.2",
 		"@elysiajs/jwt": "^1.3.1",
-		"@elysiajs/static": "^1.3.0",
 		"@elysiajs/stream": "^1.1.0",
 		"@fontsource/geist": "^5.2.6",
 		"@headlessui/react": "^2.2.4",
@@ -25,6 +19,7 @@
 		"class-variance-authority": "^0.7.1",
 		"drizzle-orm": "^0.44.2",
 		"elysia": "^1.3.4",
+		"elysia-react-router": "^0.3.1",
 		"highlight.js": "^11.11.1",
 		"lucide-react": "^0.513.0",
 		"marked": "^15.0.12",
