@@ -6,10 +6,11 @@
 
 -   [x] Basic UI
 -   [x] Chats
--   [x] Chat history
+-   [x] Chat history management
 -   [x] Basic output formatting
 -   [x] Authentication
 -   [x] Settings
 -   [x] AI Models Management (Add, Edit, Delete)
 -   [x] Attachments
+-   [x] Regenerate response
 -   [x] Ollama API
