@@ -3,10 +3,9 @@ package-lock.json
 yarn-debug.log*
 yarn-error.log*
 npm-debug.log*
-neollmchat.db
 /node_modules
-/secrets
 **/*.bun
 drizzle
 /build
+/data
 .env

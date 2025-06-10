@@ -1,7 +1,7 @@
 import { users } from '../database/schema';
-import { db } from '../database';
 import { eq } from 'drizzle-orm';
 import jwt from '@elysiajs/jwt';
+import db from '../database';
 import Elysia from 'elysia';
 
 const authPlugin = (app: Elysia) =>

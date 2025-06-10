@@ -1,6 +1,10 @@
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema';
 
-const sqlite = new Database('neollmchat.db');
-export const db = drizzle(sqlite, { schema });
+const db = drizzle({
+	connection: {
+		url: 'file:./data/neollmchat.db'
+	},
+	schema
+});
+export default db;

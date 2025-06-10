@@ -1,10 +1,10 @@
-import { encrypt } from './data-encryption';
+import { encryptContent } from './content-encryption';
 import { models } from './database/schema';
 import authPlugin from './auth/plugin';
 import Elysia, { t } from 'elysia';
 import { v4 as uuid } from 'uuid';
-import { db } from './database';
 import { eq } from 'drizzle-orm';
+import db from './database';
 
 const adminService = new Elysia({ prefix: '/api/admin' })
 	.use(authPlugin)
@@ -25,7 +25,7 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 				return { error: 'Admin role is required.' };
 			}
 
-			const ecryptedApiKey = (await encrypt(body.apiKey)) as string;
+			const ecryptedApiKey = await encryptContent(body.apiKey);
 
 			const [newModel] = await db
 				.insert(models)
@@ -61,7 +61,7 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 			let updatedData: any = {};
 
 			if (body.apiKey) {
-				updatedData['apiKey'] = (await encrypt(body.apiKey)) as string;
+				updatedData['apiKey'] = await encryptContent(body.apiKey);
 			}
 
 			if (body.model) {

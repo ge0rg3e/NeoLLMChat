@@ -4,6 +4,6 @@ export default defineConfig({
 	dialect: 'sqlite',
 	schema: './server/services/database/schema.ts',
 	dbCredentials: {
-		url: 'file:./neollmchat.db'
+		url: 'file:./data/neollmchat.db'
 	}
 });

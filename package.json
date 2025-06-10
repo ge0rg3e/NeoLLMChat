@@ -5,9 +5,9 @@
 	"module": "src/index.js",
 	"scripts": {
 		"db:generate": "bunx drizzle-kit generate",
+		"dev": "bun run --watch server/index.ts",
 		"db:studio": "bunx drizzle-kit studio",
 		"db:push": "bunx drizzle-kit push",
-		"dev": "bun run --watch server/index.ts",
 		"frontend:build": "vite build",
 		"frontend:dev": "vite"
 	},
@@ -19,8 +19,8 @@
 		"@elysiajs/stream": "^1.1.0",
 		"@fontsource/geist": "^5.2.6",
 		"@headlessui/react": "^2.2.4",
+		"@libsql/client": "^0.15.9",
 		"@tailwindcss/vite": "^4.1.8",
-		"better-sqlite3": "^11.10.0",
 		"cheerio": "^1.1.0",
 		"class-variance-authority": "^0.7.1",
 		"drizzle-orm": "^0.44.2",

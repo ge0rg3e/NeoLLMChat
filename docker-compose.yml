@@ -1,0 +1,13 @@
+services:
+  neollmchat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - CONTENT_ENCRYPTION_KEY=secret
+      - JWT_SECRET=secret
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8608:8608"
+    restart: always

@@ -2,8 +2,8 @@ import { users } from '../database/schema';
 import Elysia, { t } from 'elysia';
 import authPlugin from './plugin';
 import { eq } from 'drizzle-orm';
-import { db } from '../database';
 import jwt from '@elysiajs/jwt';
+import db from '../database';
 
 // Config
 const ACCESS_TOKEN_EXP = 5 * 60; // 5 mins
