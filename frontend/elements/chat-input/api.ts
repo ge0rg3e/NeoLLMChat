@@ -1,5 +1,5 @@
 import apiClient, { parseResponseStream } from '~frontend/lib/api';
-import type { Chat, Message } from '~frontend/stores/types';
+import type { Chat, Message } from '~shared/types';
 import { useNavigate, useParams } from 'react-router';
 import useStore from '~frontend/stores';
 import { v4 as uuid } from 'uuid';
@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid';
 const useChatApi = () => {
 	const navigate = useNavigate();
 	const { id: chatId } = useParams();
-	const { selectedModel, chats, chatInput, activeRequests, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
+	const { selectedModel, chats, chatInput, activeRequests, resetChatInput, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
 
 	const createNewChat = async () => {
 		const newChatId = uuid();
@@ -18,7 +18,9 @@ const useChatApi = () => {
 	};
 
 	const sendMessage = async () => {
-		const input = chatInput.trim();
+		const input = chatInput.text.trim();
+		const attachments = chatInput.attachments;
+
 		if (!input || !selectedModel) return;
 
 		// Get or create chat
@@ -34,13 +36,13 @@ const useChatApi = () => {
 
 		// Add user message
 		const requestId = uuid();
-		const userMessage: Message = { id: requestId, role: 'user', content: input };
+		const userMessage: Message = { id: requestId, role: 'user', content: input, attachments };
 		const updatedMessages: Message[] = [...chat!.messages, userMessage];
 
 		updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
 
 		// Reset input
-		useStore.setState({ chatInput: '' });
+		resetChatInput();
 
 		// Send request to LLM
 		const abortController = new AbortController();

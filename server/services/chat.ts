@@ -7,8 +7,19 @@ import Elysia, { t } from 'elysia';
 import { v4 as uuid } from 'uuid';
 import { db } from './database';
 import OpenAI from 'openai';
+import { Attachment, Message } from '~shared/types';
 
 const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
+
+const convertUserInputFile = async (file: File) => {
+	const arrayBuffer = await file.arrayBuffer();
+	const buffer = Buffer.from(arrayBuffer);
+	return {
+		filename: file.name,
+		mimeType: file.type,
+		data: buffer.toString('base64')
+	};
+};
 
 const getOrCreateChat = async (chatId: string, userId: string) => {
 	let chat = await db.query.chats.findFirst({ where: eq(chats.id, chatId) });
@@ -18,8 +29,8 @@ const getOrCreateChat = async (chatId: string, userId: string) => {
 	return chat;
 };
 
-const saveMessages = async (chatId: string, messages: Array<{ id: string; role: 'user' | 'assistant'; content: string }>, newContent: string) => {
-	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content: newContent }];
+const saveMessages = async (chatId: string, messages: Message[], content: string, attachments: Attachment[]) => {
+	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content, attachments }];
 	try {
 		await db.update(chats).set({ messages: updatedMessages }).where(eq(chats.id, chatId));
 	} catch (error) {
@@ -62,7 +73,7 @@ const chatService = new Elysia({ prefix: '/api' })
 				const handleAbort = async () => {
 					if (isStreamClosed) return;
 					const content = aiResponseChunks.join('') + '\n\n**Stopped**';
-					await saveMessages(body.chatId, body.messages, content);
+					await saveMessages(body.chatId, body.messages, content, []);
 					abortController.abort();
 					isStreamClosed = closeStream(stream, isStreamClosed);
 				};
@@ -82,10 +93,26 @@ const chatService = new Elysia({ prefix: '/api' })
 					// Initialize AI provider
 					const provider = new OpenAI({ baseURL: model.apiUrl, apiKey: model.decryptedApiKey });
 
+					const formattedMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = body.messages.map((message) => {
+						return {
+							id: message.id,
+							role: message.role,
+							content: [
+								{ type: 'text', text: message.content },
+								...message.attachments.map((attachment) => ({
+									type: 'image_url' as const,
+									image_url: {
+										url: `data:${attachment.mimeType};base64,${attachment.data}`
+									}
+								}))
+							]
+						} as OpenAI.Chat.Completions.ChatCompletionMessageParam;
+					});
+
 					// Stream AI response
 					const aiResponse = await provider.chat.completions.create(
 						{
-							messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...body.messages],
+							messages: [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }] }, ...formattedMessages],
 							model: model.model,
 							stream: true
 						},
@@ -108,7 +135,7 @@ const chatService = new Elysia({ prefix: '/api' })
 						});
 
 						if (done) {
-							await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''));
+							await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''), []);
 							break;
 						}
 					}
@@ -133,7 +160,14 @@ const chatService = new Elysia({ prefix: '/api' })
 					t.Object({
 						id: t.String(),
 						role: t.Union([t.Literal('user'), t.Literal('assistant')]),
-						content: t.String()
+						content: t.String(),
+						attachments: t.Array(
+							t.Object({
+								fileName: t.String(),
+								mimeType: t.String(),
+								data: t.String()
+							})
+						)
 					})
 				)
 			})

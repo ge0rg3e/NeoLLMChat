@@ -1,8 +1,8 @@
-import type { Message as _Message } from '~frontend/stores/types';
-import { CopyIcon, RefreshCcwIcon } from 'lucide-react';
+import type { Message as _Message } from '~shared/types';
+import { CopyIcon, PencilIcon, RefreshCcwIcon } from 'lucide-react';
 import { markedHighlight } from 'marked-highlight';
 import Button from '~frontend/components/button';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import useChatApi from '../chat-input/api';
 import useStore from '~frontend/stores';
 import * as cheerio from 'cheerio';
@@ -56,14 +56,6 @@ const Message = ({ data }: Props) => {
 		scrollToLastMessage();
 	};
 
-	const handleRegenerate = async () => {
-		await regenerateMessage(data.id);
-	};
-
-	const handleCopy = () => {
-		navigator.clipboard.writeText(data.content);
-	};
-
 	useEffect(() => {
 		formatContent();
 	}, [data]);
@@ -74,14 +66,48 @@ const Message = ({ data }: Props) => {
 		<div className="w-full max-w-[755px] mx-auto space-y-2">
 			{data.role === 'user' ? <p className="bg-card rounded-xl py-2 px-3 w-fit">{data.content}</p> : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formattedContent }} />}
 
-			{/* Options */}
-			{data.role === 'assistant' && !activeRequest && (
-				<div className="flex-start-center gap-x-1 -mx-2">
-					<Button variant="ghost" size="icon" title="Regenerate" onClick={handleRegenerate}>
-						<RefreshCcwIcon />
-					</Button>
+			{/* Attachments  */}
+			{data.attachments.length !== 0 && (
+				<div className="flex-start-center gap-x-2 py-1">
+					{data.attachments.map((attachment, i) => {
+						const isImage = attachment.mimeType.startsWith('image/');
 
-					<Button variant="ghost" size="icon" title="Copy" onClick={handleCopy}>
+						return (
+							<div key={i} className="flex-center-center overflow-hidden">
+								{isImage && (
+									<img
+										src={`data:${attachment.mimeType};base64,${attachment.data}`}
+										className="size-11 rounded-lg object-cover border"
+										title={attachment.fileName}
+										alt={attachment.fileName}
+									/>
+								)}
+							</div>
+						);
+					})}
+				</div>
+			)}
+
+			{/* Options */}
+			{!activeRequest && (
+				<div className="flex-start-center gap-x-1 -mx-2">
+					{data.role === 'assistant' && (
+						<Fragment>
+							<Button variant="ghost" size="icon" title="Regenerate" onClick={async () => await regenerateMessage(data.id)}>
+								<RefreshCcwIcon />
+							</Button>
+						</Fragment>
+					)}
+
+					{data.role === 'user' && (
+						<Fragment>
+							<Button variant="ghost" size="icon" title="Edit">
+								<PencilIcon />
+							</Button>
+						</Fragment>
+					)}
+
+					<Button variant="ghost" size="icon" title="Copy" onClick={() => navigator.clipboard.writeText(data.content)}>
 						<CopyIcon />
 					</Button>
 				</div>

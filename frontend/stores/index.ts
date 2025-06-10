@@ -1,4 +1,4 @@
-import type { ActiveRequest, Chat, Message, Model, Session, Theme } from './types';
+import type { ActiveRequest, Chat, ChatInput, Message, Model, Session, Theme } from '~shared/types';
 import apiClient from '~frontend/lib/api';
 import { create } from 'zustand';
 
@@ -6,14 +6,15 @@ interface Store {
 	// states
 	activeRequests: Array<ActiveRequest>;
 	selectedModel: Model | null;
+	chatInput: ChatInput;
 	models: Array<Model>;
 	chats: Array<Chat>;
-	chatInput: string;
 	session: Session;
 	theme: Theme;
 
 	// actions - other
 	init: () => Promise<void>;
+	resetChatInput: () => void;
 
 	// actions - request
 	createRequest: (data: ActiveRequest) => void;
@@ -41,7 +42,10 @@ const useStore = create<Store>()((set) => ({
 	session: undefined,
 	selectedModel: null,
 	activeRequests: [],
-	chatInput: '',
+	chatInput: {
+		text: '',
+		attachments: []
+	},
 	theme: 'dark',
 	models: [],
 	chats: [],
@@ -61,6 +65,7 @@ const useStore = create<Store>()((set) => ({
 			console.error('>> NeoLLMChat - Failed initialize store data.', err);
 		}
 	},
+	resetChatInput: () => set({ chatInput: { text: '', attachments: [] } }),
 
 	// actions - active requests
 	createRequest: (data: ActiveRequest) =>
@@ -97,7 +102,7 @@ const useStore = create<Store>()((set) => ({
 			switch (action) {
 				case 'add':
 					if ('messages' in data) return state; // Type guard to ensure data is Partial<Message>
-					newChat.messages = [...newChat.messages, { id: messageId, role: data.role || 'user', content: data.content || '', ...data }];
+					newChat.messages = [...newChat.messages, { id: messageId, role: data.role || 'user', content: data.content || '', attachments: data.attachments || [], ...data }];
 					break;
 				case 'edit':
 					if ('messages' in data) return state; // Type guard to ensure data is Partial<Message>
@@ -105,7 +110,7 @@ const useStore = create<Store>()((set) => ({
 					if (existingMessage) {
 						newChat.messages = newChat.messages.map((message) => (message.id === messageId ? { ...message, ...data } : message));
 					} else {
-						newChat.messages = [...newChat.messages, { id: messageId, role: data.role || 'user', content: data.content || '', ...data }];
+						newChat.messages = [...newChat.messages, { id: messageId, role: data.role || 'user', content: data.content || '', attachments: data.attachments || [], ...data }];
 					}
 					break;
 				case 'delete':

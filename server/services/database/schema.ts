@@ -1,4 +1,5 @@
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { Message } from '~shared/types';
 import { sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 
@@ -10,9 +11,6 @@ export const users = sqliteTable('users', {
 	email: text('email').notNull().unique(),
 	password: text('password').notNull(),
 	role: text('role').default('user'),
-	permissions: text('permissions', { mode: 'json' })
-		.$type<string[]>()
-		.default(sql`'[]'`),
 	refreshToken: text('refresh_token'),
 	createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`)
 });
@@ -35,7 +33,7 @@ export const chats = sqliteTable('chats', {
 		.primaryKey(),
 	title: text('title').notNull(),
 	messages: text('messages', { mode: 'json' })
-		.$type<{ id: string; role: 'user' | 'assistant'; content: string }[]>()
+		.$type<Message[]>()
 		.default(sql`'[]'`)
 		.notNull(),
 	createdBy: text('created_by').notNull(),

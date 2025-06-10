@@ -1,5 +1,10 @@
 export type Theme = 'dark' | 'light';
 
+export type ChatInput = {
+	text: string;
+	attachments: Array<Attachment>;
+};
+
 export type ActiveRequest = {
 	abortController: AbortController;
 	requestId: string;
@@ -29,8 +34,15 @@ export type Chat = {
 	createdAt: Date;
 };
 
+export type Attachment = {
+	fileName: string;
+	mimeType: string;
+	data: string;
+};
+
 export type Message = {
 	id: string;
 	role: 'user' | 'assistant';
 	content: string;
+	attachments: Array<Attachment>;
 };

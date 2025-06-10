@@ -10,6 +10,7 @@
 		"skipLibCheck": true,
 		"baseUrl": ".",
 		"paths": {
+			"~shared/*": ["./shared/*"],
 			"~server/*": ["./server/*"],
 			"~frontend/*": ["./frontend/*"]
 		}

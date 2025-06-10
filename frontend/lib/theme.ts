@@ -1,4 +1,4 @@
-import type { Theme } from '~frontend/stores/types';
+import type { Theme } from '~shared/types';
 import useStore from '~frontend/stores';
 import { useEffect } from 'react';
 
