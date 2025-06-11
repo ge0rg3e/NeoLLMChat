@@ -1,4 +1,4 @@
-import { reactRouter } from 'elysia-react-router';
+import frontendService from './services/frontend';
 import adminService from './services/admin';
 import authService from './services/auth';
 import chatService from './services/chat';
@@ -13,7 +13,7 @@ const app = new Elysia()
 			credentials: true
 		})
 	)
-	.use(await reactRouter())
+	.use(frontendService)
 	.use(chatService)
 	.use(adminService)
 	.use(authService)
