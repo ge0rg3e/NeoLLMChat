@@ -1,8 +1,9 @@
 {
-	"name": "neollmchat",
-	"version": "0.0.1",
+	"name": "neo-llm-chat",
+	"version": "0.0.4",
 	"author": "Ge0rg3e",
 	"module": "src/index.js",
+	"license": "MIT",
 	"scripts": {
 		"dev": "bun run --watch server/index.ts"
 	},
