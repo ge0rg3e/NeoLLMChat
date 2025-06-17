@@ -5,15 +5,6 @@ import db from './database';
 
 const adminService = new Elysia({ prefix: '/api/admin' })
 	.use(authPlugin)
-	.get('/users', async ({ user, set }) => {
-		if (user.role !== 'admin') {
-			set.status = 401;
-			return { error: 'Admin role is required.' };
-		}
-
-		const data = await db.user.findMany({ select: { id: true, username: true, role: true } });
-		return { data };
-	})
 	.post(
 		'/models',
 		async ({ body, user, set }) => {
