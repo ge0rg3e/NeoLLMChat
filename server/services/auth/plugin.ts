@@ -1,5 +1,3 @@
-import { users } from '../database/schema';
-import { eq } from 'drizzle-orm';
 import jwt from '@elysiajs/jwt';
 import db from '../database';
 import Elysia from 'elysia';
@@ -24,8 +22,12 @@ const authPlugin = (app: Elysia) =>
 				throw new Error('Access token is invalid');
 			}
 
-			const user = await db.query.users.findFirst({ where: eq(users.id, String(jwtPayload.sub)), columns: { id: true, username: true, role: true } });
-
+			const user = await db.user.findUnique({
+				where: {
+					id: String(jwtPayload.sub)
+				},
+				select: { id: true, username: true, role: true }
+			});
 			if (!user) {
 				set.status = 403;
 				throw new Error('Access token is invalid');

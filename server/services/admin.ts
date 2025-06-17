@@ -1,9 +1,6 @@
 import { encryptContent } from './content-encryption';
-import { models } from './database/schema';
 import authPlugin from './auth/plugin';
 import Elysia, { t } from 'elysia';
-import { v4 as uuid } from 'uuid';
-import { eq } from 'drizzle-orm';
 import db from './database';
 
 const adminService = new Elysia({ prefix: '/api/admin' })
@@ -14,8 +11,8 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 			return { error: 'Admin role is required.' };
 		}
 
-		const users = await db.query.users.findMany({ columns: { id: true, username: true, role: true } });
-		return { data: users };
+		const data = await db.user.findMany({ select: { id: true, username: true, role: true } });
+		return { data };
 	})
 	.post(
 		'/models',
@@ -27,17 +24,15 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 
 			const ecryptedApiKey = await encryptContent(body.apiKey);
 
-			const [newModel] = await db
-				.insert(models)
-				.values({
-					id: uuid(),
+			const newModel = await db.model.create({
+				data: {
 					model: body.model,
 					provider: body.provider,
 					apiUrl: body.apiUrl,
 					apiKey: ecryptedApiKey,
 					createdBy: user.id
-				})
-				.returning();
+				}
+			});
 
 			return { data: newModel };
 		},
@@ -76,13 +71,14 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 				updatedData['apiUrl'] = body.apiUrl;
 			}
 
-			const [updatedModel] = await db
-				.update(models)
-				.set({ ...updatedData })
-				.where(eq(models.id, body.id))
-				.returning();
+			const updatedModel = await db.model.update({
+				where: {
+					id: body.id
+				},
+				data: updatedData
+			});
 
-			return { data: updatedModel };
+			return { data: { ...updatedModel, id: body.id } };
 		},
 		{
 			body: t.Object({
@@ -102,7 +98,11 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 				return { error: 'Admin role is required.' };
 			}
 
-			await db.delete(models).where(eq(models.id, body.id));
+			await db.model.delete({
+				where: {
+					id: body.id
+				}
+			});
 			return { data: true };
 		},
 		{

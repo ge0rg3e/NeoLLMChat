@@ -1,15 +1,14 @@
 import { closeStream, getModel, getOrCreateChat, saveMessages, SYSTEM_PROMPT } from './helpers';
-import { chats } from '../database/schema';
+import type { Chat } from '~shared/types';
 import { Stream } from '@elysiajs/stream';
 import authPlugin from '../auth/plugin';
-import { and, eq } from 'drizzle-orm';
 import Elysia, { t } from 'elysia';
 import db from '../database';
 import OpenAI from 'openai';
 
 const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
-	.get('/models', async () => await db.query.models.findMany({ columns: { id: true, model: true, provider: true, apiUrl: true } }))
+	.get('/models', async () => await db.model.findMany({ select: { id: true, model: true, provider: true, apiUrl: true } }))
 	.post(
 		'/chat',
 		async ({ body, request, user }) => {
@@ -125,7 +124,12 @@ const chatService = new Elysia({ prefix: '/api' })
 		'/chat',
 		async ({ body, user, set }) => {
 			try {
-				await db.delete(chats).where(and(eq(chats.id, body.id), eq(chats.createdBy, user.id)));
+				await db.chat.deleteMany({
+					where: {
+						id: body.id,
+						createdBy: user.id
+					}
+				});
 				return { data: true };
 			} catch {
 				set.status = 500;
@@ -139,12 +143,19 @@ const chatService = new Elysia({ prefix: '/api' })
 		}
 	)
 	.get('/chats', async ({ user }) => {
-		const userChats = await db.query.chats.findMany({ where: eq(chats.createdBy, user.id) });
-		return userChats;
+		return (await db.chat.findMany({
+			where: {
+				createdBy: user.id
+			}
+		})) as any as Chat;
 	})
 	.delete('/chats', async ({ user, set }) => {
 		try {
-			await db.delete(chats).where(eq(chats.createdBy, user.id));
+			await db.chat.deleteMany({
+				where: {
+					createdBy: user.id
+				}
+			});
 			return { data: true };
 		} catch {
 			set.status = 500;

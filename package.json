@@ -5,7 +5,9 @@
 	"module": "src/index.js",
 	"license": "MIT",
 	"scripts": {
-		"dev": "bun run --watch server/index.ts"
+		"dev": "bun run --watch server/index.ts",
+		"db:generate": "bunx prisma generate",
+		"ui:build": "bunx vite build"
 	},
 	"dependencies": {
 		"@elysiajs/cors": "^1.3.3",
@@ -15,11 +17,10 @@
 		"@elysiajs/stream": "^1.1.0",
 		"@fontsource/geist": "^5.2.6",
 		"@headlessui/react": "^2.2.4",
-		"@libsql/client": "^0.15.9",
+		"@prisma/client": "^6.9.0",
 		"@tailwindcss/vite": "^4.1.8",
 		"cheerio": "^1.1.0",
 		"class-variance-authority": "^0.7.1",
-		"drizzle-orm": "^0.44.2",
 		"elysia": "^1.3.4",
 		"highlight.js": "^11.11.1",
 		"lucide-react": "^0.513.0",
@@ -41,9 +42,9 @@
 		"@types/react-dom": "^19.1.2",
 		"@vitejs/plugin-react": "^4.4.1",
 		"bun-types": "latest",
-		"drizzle-kit": "^0.31.1",
 		"eslint": "^9.25.0",
 		"eslint-plugin-react-refresh": "^0.4.19",
+		"prisma": "^6.9.0",
 		"tw-animate-css": "^1.3.4",
 		"vite": "^6.3.5"
 	}

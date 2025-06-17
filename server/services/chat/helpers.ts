@@ -1,16 +1,21 @@
 import { decryptContent } from '../content-encryption';
-import { chats, models } from '../database/schema';
-import type { Message } from '~shared/types';
+import type { Message } from '../../../shared/types';
 import { v4 as uuid } from 'uuid';
-import { eq } from 'drizzle-orm';
 import db from '../database';
 
 export const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
 
 export const getOrCreateChat = async (chatId: string, userId: string) => {
-	let chat = await db.query.chats.findFirst({ where: eq(chats.id, chatId) });
+	let chat = await db.chat.findUnique({ where: { id: chatId } });
 	if (!chat) {
-		chat = (await db.insert(chats).values({ id: chatId, title: 'New chat', messages: [], createdBy: userId }).returning())[0];
+		chat = await db.chat.create({
+			data: {
+				id: chatId,
+				title: 'New chat',
+				messages: [],
+				createdBy: userId
+			}
+		});
 	}
 	return chat;
 };
@@ -18,7 +23,7 @@ export const getOrCreateChat = async (chatId: string, userId: string) => {
 export const saveMessages = async (chatId: string, messages: Message[], content: string) => {
 	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content, attachments: [] }];
 	try {
-		await db.update(chats).set({ messages: updatedMessages }).where(eq(chats.id, chatId));
+		await db.chat.update({ where: { id: chatId }, data: { messages: updatedMessages } });
 	} catch (error) {
 		console.error('Error saving messages:', error);
 	}
@@ -38,7 +43,7 @@ export const closeStream = (stream: any, isStreamClosed: boolean) => {
 };
 
 export const getModel = async (id: string) => {
-	const model = await db.query.models.findFirst({ where: eq(models.id, id) });
+	const model = await db.model.findUnique({ where: { id } });
 	if (!model) return null;
 
 	const decryptedApiKey = (await decryptContent(model.apiKey)) as string;

@@ -7,5 +7,4 @@ npm-debug.log*
 **/*.bun
 drizzle
 /build
-/data
 .env

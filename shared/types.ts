@@ -21,17 +21,10 @@ export type Session =
 	| undefined;
 
 export type Model = {
-	id: string; // DB ID
 	model: string;
-	provider: string;
-};
-
-export type Chat = {
 	id: string;
-	title: string;
-	messages: Array<Message>;
-	createdBy: string;
-	createdAt: Date;
+	provider: string;
+	apiUrl: string;
 };
 
 export type Attachment = {
@@ -45,4 +38,12 @@ export type Message = {
 	role: 'user' | 'assistant';
 	content: string;
 	attachments: Array<Attachment>;
+};
+
+export type Chat = {
+	id: string;
+	title: string;
+	messages: Array<Message>;
+	createdBy: string;
+	createdAt: Date;
 };
