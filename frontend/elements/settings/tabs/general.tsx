@@ -1,20 +1,21 @@
 import Button from '~frontend/components/button';
 import { MoonIcon, SunIcon } from 'lucide-react';
+import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
-import useTheme from '~frontend/lib/theme';
+import { useSync } from '~frontend/lib/sync';
 import { useNavigate } from 'react-router';
 import apiClient from '~frontend/lib/api';
-import useStore from '~frontend/stores';
 import { toast } from 'sonner';
 
 const GeneralTab = () => {
-	const { theme, setTheme } = useTheme();
+	const { db } = useSync();
 	const navigate = useNavigate();
-	const { session } = useStore();
+	const { session, setSession, theme, setTheme } = useApp();
 
 	const handleLogout = async () => {
 		await apiClient.auth.logout.post();
-		useStore.setState({ session: null });
+		setSession(null);
+
 		toast.success('You have successfully logged out.');
 		navigate('/login');
 	};
@@ -23,7 +24,8 @@ const GeneralTab = () => {
 		const yes = window.confirm('Are you sure you want to delete all your chats?');
 		if (!yes) return;
 
-		useStore.setState({ chats: [] });
+		await db.chats.clear();
+
 		const { error } = await apiClient.chats.delete();
 		if (error) return toast.error((error.value as any).error);
 

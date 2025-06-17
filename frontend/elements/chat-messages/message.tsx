@@ -1,22 +1,24 @@
-import type { Message as _Message } from '~shared/types';
 import { CopyIcon, PencilIcon, RefreshCcwIcon } from 'lucide-react';
-import { markedHighlight } from 'marked-highlight';
-import Button from '~frontend/components/button';
+import type { Message as _Message } from '~shared/types';
 import { Fragment, useEffect, useState } from 'react';
+import { markedHighlight } from 'marked-highlight';
+import { useLiveQuery } from 'dexie-react-hooks';
+import Button from '~frontend/components/button';
+import { useSync } from '~frontend/lib/sync';
 import useChatApi from '../chat-input/api';
-import useStore from '~frontend/stores';
 import * as cheerio from 'cheerio';
-import hljs from 'highlight.js';
 import { Marked } from 'marked';
+import hljs from 'highlight.js';
 
 type Props = {
 	data: _Message;
 };
 
 const Message = ({ data }: Props) => {
+	const { db } = useSync();
 	const { chatId, regenerateMessage } = useChatApi();
-	const activeRequests = useStore((state) => state.activeRequests);
 	const [formattedContent, setFormattedContent] = useState<string>('');
+	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
 	const scrollToLastMessage = () => {
 		const chatMessages = document.getElementById('chat-messages');
@@ -60,7 +62,7 @@ const Message = ({ data }: Props) => {
 		formatContent();
 	}, [data]);
 
-	const activeRequest = activeRequests.find((r) => r.chatId === chatId);
+	const activeRequest = activeRequests?.find((r) => r.chatId === chatId);
 
 	return (
 		<div className="w-full max-w-[755px] mx-auto space-y-2">

@@ -1,22 +1,26 @@
 import { AttachmentsPreview, AttachmentsTrigger } from './attachments';
 import { SendHorizontalIcon, SquareIcon } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import Button from '~frontend/components/button';
+import { useApp } from '~frontend/lib/context';
 import ModelSelector from '../model-selector';
 import { twMerge } from '~frontend/lib/utils';
+import { useSync } from '~frontend/lib/sync';
 import { useLocation } from 'react-router';
-import useStore from '~frontend/stores';
 import { useMemo } from 'react';
 import useChatApi from './api';
 
 const ChatInput = () => {
+	const { db } = useSync();
 	const { pathname } = useLocation();
-	const { chatInput, activeRequests } = useStore();
+	const { chatInput, setChatInput } = useApp();
 	const { chatId, sendMessage, stopRequest } = useChatApi();
+	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
-	const handleSend = () => (activeRequests.find((r) => r.chatId === chatId) ? stopRequest() : sendMessage());
+	const handleSend = () => (activeRequests?.find((r) => r.chatId === chatId) ? stopRequest() : sendMessage());
 
 	const buttonState = useMemo(() => {
-		const activeRequest = activeRequests.find((r) => r.chatId === chatId);
+		const activeRequest = activeRequests?.find((r) => r.chatId === chatId);
 		if (activeRequest) return { disabled: false, icon: SquareIcon, label: 'Stop' };
 		if (!chatInput.text.trim()) return { disabled: true, icon: SendHorizontalIcon, label: 'Send' };
 		return { disabled: false, icon: SendHorizontalIcon, label: 'Send' };
@@ -29,7 +33,7 @@ const ChatInput = () => {
 					<AttachmentsPreview />
 					<textarea
 						className="w-full h-full p-3 pb-0 bg-transparent border-none outline-none resize-none rounded-xl text-foreground placeholder:text-muted-foreground"
-						onChange={(e) => useStore.setState((prev) => ({ chatInput: { ...prev.chatInput, text: e.target.value } }))}
+						onChange={(e) => setChatInput((prev) => ({ ...prev, text: e.target.value }))}
 						placeholder="Type your prompt here..."
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' && !e.shiftKey) {

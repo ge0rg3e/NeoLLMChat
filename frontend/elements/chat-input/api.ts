@@ -1,17 +1,29 @@
 import apiClient, { parseResponseStream } from '~frontend/lib/api';
-import type { Chat, Message } from '~shared/types';
 import { useNavigate, useParams } from 'react-router';
-import useStore from '~frontend/stores';
+import type { Chat, Message } from '~shared/types';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useApp } from '~frontend/lib/context';
+import { useSync } from '~frontend/lib/sync';
 import { v4 as uuid } from 'uuid';
 
 const useChatApi = () => {
+	const { db } = useSync();
 	const navigate = useNavigate();
 	const { id: chatId } = useParams();
-	const { selectedModel, chats, chatInput, activeRequests, resetChatInput, createChat, updateChatMessages, createRequest, deleteRequest } = useStore();
+	const { abortControllers, setAbortControllers, selectedModel, chatInput, setChatInput, session } = useApp();
+
+	const chats = useLiveQuery(() => db.chats.toArray());
+	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
 	const createNewChat = async () => {
 		const newChatId = uuid();
-		await createChat(newChatId);
+		await db.chats.add({
+			id: newChatId,
+			title: 'New Chat',
+			messages: [],
+			createdBy: session!.id!,
+			createdAt: new Date()
+		});
 		navigate(`/c/${newChatId}`);
 		// Return the new chat object directly
 		return { id: newChatId, messages: [] };
@@ -25,7 +37,7 @@ const useChatApi = () => {
 
 		// Get or create chat
 		let targetChatId: string;
-		let chat = chatId ? chats.find((c) => c.id === chatId) : null;
+		let chat = chatId ? chats?.find((c) => c.id === chatId) : null;
 
 		if (!chat) {
 			chat = (await createNewChat()) as any as Chat;
@@ -39,14 +51,17 @@ const useChatApi = () => {
 		const userMessage: Message = { id: requestId, role: 'user', content: input, attachments };
 		const updatedMessages: Message[] = [...chat!.messages, userMessage];
 
-		updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
+		// updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
+		await db.chats.update(targetChatId, { messages: updatedMessages });
 
 		// Reset input
-		resetChatInput();
+		setChatInput({ text: '', attachments: [] });
 
 		// Send request to LLM
 		const abortController = new AbortController();
-		createRequest({ requestId, chatId: targetChatId, abortController });
+
+		await db.activeRequests.add({ requestId, chatId: targetChatId });
+		setAbortControllers((prev) => [...prev, { requestId, controller: abortController }]);
 
 		try {
 			const response = await apiClient.chat.post({ chatId: targetChatId, requestId, modelId: selectedModel.id, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
@@ -61,46 +76,47 @@ const useChatApi = () => {
 				if (!chunkData) continue;
 
 				assistantContent += chunkData.content;
-				updateChatMessages(targetChatId, 'edit', assistantMessageId, {
-					id: assistantMessageId,
-					role: 'assistant',
-					content: assistantContent
-				});
+				await db.chats.update(targetChatId, { messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
 				if (chunkData.done) {
-					deleteRequest(requestId);
+					await db.activeRequests.delete(requestId);
+					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 					break;
 				}
 			}
 		} catch (err) {
+			await db.activeRequests.delete(requestId);
+			setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 			console.error('>> NeoLLMChat - Failed to send chat request.', err);
-			deleteRequest(requestId);
 		}
 	};
 
 	const stopRequest = async () => {
-		if (!chatId) return; // Guard against undefined chatId
+		if (!chatId) return;
 
-		const activeRequest = activeRequests.find((r) => r.chatId === chatId);
+		const activeRequest = activeRequests?.find((r) => r.chatId === chatId);
 		if (!activeRequest) return;
 
-		activeRequest.abortController.abort();
-		const chat = chats.find((c) => c.id === chatId);
+		const abortController = abortControllers?.find((c) => c.requestId === activeRequest.requestId);
+		abortController?.controller.abort();
+
+		const chat = chats?.find((c) => c.id === chatId);
 		const lastMessage = chat?.messages[chat.messages.length - 1];
 
 		if (lastMessage?.role === 'assistant') {
 			const updatedContent = `${lastMessage.content}\n\n**Stopped**`;
-			updateChatMessages(chatId, 'edit', lastMessage.id, { ...lastMessage, content: updatedContent });
+			await db.chats.update(chatId, { messages: [...chat!.messages, { ...lastMessage, content: updatedContent }] });
 		}
 
-		deleteRequest(activeRequest.requestId);
+		await db.activeRequests.delete(activeRequest.requestId);
+		setAbortControllers((prev) => prev.filter((c) => c.requestId !== activeRequest.requestId));
 	};
 
 	const regenerateMessage = async (messageId: string) => {
 		if (!chatId) return; // Guard against undefined chatId
 
 		try {
-			const chat = chats.find((c) => c.id === chatId);
+			const chat = chats?.find((c) => c.id === chatId);
 			if (!chat || !selectedModel) return;
 
 			const messageIndex = chat.messages.findIndex((m) => m.id === messageId);
@@ -111,12 +127,13 @@ const useChatApi = () => {
 			if (!messagesToKeep.length) return;
 
 			// Update chat with truncated message history
-			updateChatMessages(chatId, 'replace', '', { id: chatId, messages: messagesToKeep });
+			await db.chats.update(chatId, { messages: messagesToKeep });
 
 			// Create new request
 			const requestId = uuid();
 			const abortController = new AbortController();
-			createRequest({ requestId, chatId, abortController });
+			await db.activeRequests.add({ requestId, chatId });
+			setAbortControllers((prev) => [...prev, { requestId, controller: abortController }]);
 
 			try {
 				const response = await apiClient.chat.post(
@@ -130,7 +147,8 @@ const useChatApi = () => {
 				);
 
 				if (!response.data) {
-					deleteRequest(requestId);
+					await db.activeRequests.delete(requestId);
+					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 					return;
 				}
 
@@ -143,20 +161,18 @@ const useChatApi = () => {
 					if (!chunkData) continue;
 
 					assistantContent += chunkData.content;
-					updateChatMessages(chatId, 'edit', assistantMessageId, {
-						id: assistantMessageId,
-						role: 'assistant',
-						content: assistantContent
-					});
+					await db.chats.update(chat, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
 					if (chunkData.done) {
-						deleteRequest(requestId);
+						await db.activeRequests.delete(requestId);
+						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 						break;
 					}
 				}
+				await db.activeRequests.delete(requestId);
+				setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 			} catch (err) {
 				console.error('>> NeoLLMChat - Failed to regenerate message.', err);
-				deleteRequest(requestId);
 			}
 		} catch (err) {
 			console.error('>> NeoLLMChat - Failed to regenerate message.', err);

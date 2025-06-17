@@ -1,10 +1,10 @@
 'use client';
 
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
-import useTheme from '~frontend/lib/theme';
+import { useApp } from '~frontend/lib/context';
 
 const Toaster = ({ ...props }: ToasterProps) => {
-	const { theme } = useTheme();
+	const { theme } = useApp();
 
 	return (
 		<Sonner

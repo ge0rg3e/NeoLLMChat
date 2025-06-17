@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router';
+import AppContextProvider from './lib/context';
 import { createRoot } from 'react-dom/client';
-import { useEffect } from 'react';
-import useStore from './stores';
 
 // Pages
 import Register from './pages/register';
@@ -9,8 +8,9 @@ import Login from './pages/login';
 import Chat from './pages/chat';
 import Home from './pages/home';
 
-// Style
+// @ts-ignore App Style
 import './globals.css';
+// @ts-ignore Highlight.js Style
 import 'highlight.js/styles/github.css';
 
 const router = createBrowserRouter([
@@ -33,13 +33,11 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-	const { init } = useStore();
-
-	useEffect(() => {
-		init();
-	}, []);
-
-	return <RouterProvider router={router} />;
+	return (
+		<AppContextProvider>
+			<RouterProvider router={router} />
+		</AppContextProvider>
+	);
 };
 
 createRoot(document.getElementById('root')!).render(<App />);

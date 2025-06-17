@@ -2,9 +2,9 @@ import { Settings2Icon, UserCogIcon, XIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import Button from '~frontend/components/button';
 import Modal from '~frontend/components/modal';
+import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
 import GeneralTab from './tabs/general';
-import useStore from '~frontend/stores';
 import AdminTab from './tabs/admin';
 import { useEffect } from 'react';
 
@@ -24,7 +24,7 @@ const tabs = [
 ];
 
 const Settings = () => {
-	const { session } = useStore();
+	const { session } = useApp();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const settingsTab = searchParams.get('settings');

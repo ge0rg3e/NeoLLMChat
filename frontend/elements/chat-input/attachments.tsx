@@ -1,12 +1,12 @@
 import type { Attachment } from '~shared/types';
 import Button from '~frontend/components/button';
+import { useApp } from '~frontend/lib/context';
 import { LinkIcon, XIcon } from 'lucide-react';
 import { Fragment, useRef } from 'react';
-import useStore from '~frontend/stores';
 import { toast } from 'sonner';
 
 export const AttachmentsTrigger = () => {
-	const { chatInput } = useStore();
+	const { chatInput, setChatInput } = useApp();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +31,7 @@ export const AttachmentsTrigger = () => {
 				return toast.error('File already attached.');
 			}
 
-			useStore.setState((prev) => ({ chatInput: { ...prev.chatInput, attachments: [...prev.chatInput.attachments, attachment] } }));
+			setChatInput((prev) => ({ ...prev, attachments: [...prev.attachments, attachment] }));
 
 			// Reset the input element
 			event.target.value = '';
@@ -50,12 +50,12 @@ export const AttachmentsTrigger = () => {
 };
 
 export const AttachmentsPreview = () => {
-	const { chatInput } = useStore();
+	const { chatInput, setChatInput } = useApp();
 
 	const handleRemove = (index: number) => {
 		const newAttachments = [...chatInput.attachments];
 		newAttachments.splice(index, 1);
-		useStore.setState((prev) => ({ chatInput: { ...prev.chatInput, attachments: newAttachments } }));
+		setChatInput((prev) => ({ ...prev, attachments: newAttachments }));
 	};
 
 	if (chatInput.attachments.length === 0) return null;

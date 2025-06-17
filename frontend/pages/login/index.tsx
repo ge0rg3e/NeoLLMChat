@@ -1,13 +1,14 @@
 import Button from '~frontend/components/button';
+import { useApp } from '~frontend/lib/context';
 import Input from '~frontend/components/input';
 import Layout from '~frontend/elements/layout';
 import { useNavigate } from 'react-router';
 import apiClient from '~frontend/lib/api';
-import useStore from '~frontend/stores';
 import { toast } from 'sonner';
 
 const Login = () => {
 	const navigate = useNavigate();
+	const { setSession } = useApp();
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -19,7 +20,8 @@ const Login = () => {
 		const { data, error } = await apiClient.auth.login.post({ username, password });
 		if (error) return toast.error((error.value as any).error);
 
-		useStore.setState({ session: data.session as any });
+		setSession(data.session as any);
+
 		toast.success('You have successfully logged in.');
 		navigate('/');
 	};

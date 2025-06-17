@@ -1,14 +1,14 @@
 import { PencilIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
 import Button from '~frontend/components/button';
 import Input from '~frontend/components/input';
+import { useApp } from '~frontend/lib/context';
 import Modal from '~frontend/components/modal';
 import { Fragment, useState } from 'react';
 import apiClient from '~frontend/lib/api';
-import useStore from '~frontend/stores';
 import { toast } from 'sonner';
 
 const Models = () => {
-	const { models } = useStore();
+	const { models, setModels } = useApp();
 	const [showModal, setShowModal] = useState<{ mode: 'add' | 'edit'; payload?: any } | null>(null);
 
 	const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,7 +24,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		useStore.setState({ models: [...models, data.data!] });
+		setModels((prev) => [...prev, data.data!]);
 		toast.success('You have successfully added a new model.');
 	};
 
@@ -42,7 +42,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		useStore.setState({ models: models.map((m) => (m.id === data.data!.id ? data.data! : m)) });
+		setModels((prev) => prev.map((m) => (m.id === data.data!.id ? data.data! : m)));
 		toast.success('You have successfully updated this model.');
 	};
 
@@ -54,7 +54,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		useStore.setState({ models: models.filter((m) => m.id !== id) });
+		setModels((prev) => prev.filter((m) => m.id !== id));
 		toast.success('You have successfully deleted this model.');
 	};
 

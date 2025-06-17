@@ -1,14 +1,14 @@
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
 import { ChevronsUpDownIcon } from 'lucide-react';
+import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
-import useStore from '~frontend/stores';
 
 interface Props {
 	orientation?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 const ModelSelector = ({ orientation = 'bottom' }: Props) => {
-	const { models, selectedModel } = useStore();
+	const { models, selectedModel, setSelectedModel } = useApp();
 
 	const getOrientationClasses = () => {
 		switch (orientation) {
@@ -25,7 +25,7 @@ const ModelSelector = ({ orientation = 'bottom' }: Props) => {
 	};
 
 	return (
-		<Listbox value={selectedModel} onChange={(model) => useStore.setState({ selectedModel: model })}>
+		<Listbox value={selectedModel} onChange={(model) => setSelectedModel(model)}>
 			<div className="relative w-fit">
 				<ListboxButton className="grid w-full grid-cols-1 rounded-lg py-2 px-3 flex-center-center gap-x-2 outline-none border-none transition-smooth hover:bg-accent/30 data-active:bg-accent/30 cursor-pointer">
 					<span className="text-sm">{models.length ? selectedModel?.model ?? 'Select a model' : 'No models available'}</span>

@@ -1,17 +1,22 @@
 import { Link, useLocation, useNavigate } from 'react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
+import { useSync } from '~frontend/lib/sync';
 import { Trash2Icon } from 'lucide-react';
 import apiClient from '~frontend/lib/api';
-import useStore from '~frontend/stores';
 import { toast } from 'sonner';
 
 const SideBar = () => {
+	const { db } = useSync();
+	const { session } = useApp();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { chats, session, deleteChat } = useStore();
+	const chats = useLiveQuery(() => db.chats.toArray());
 
 	const handleDeleteChat = async (chatId: string) => {
-		await deleteChat(chatId);
+		await db.chats.delete(chatId);
+
 		const { error } = await apiClient.chat.delete({ id: chatId });
 		if (error) return toast.error((error.value as any).error);
 
@@ -30,7 +35,7 @@ const SideBar = () => {
 
 				{/* Chats */}
 				<div className="space-y-0.5">
-					{chats.map((chat) => (
+					{chats?.map((chat) => (
 						<Link
 							className={twMerge('relative group w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent', location.pathname === `/c/${chat.id}` && 'bg-accent')}
 							to={`/c/${chat.id}`}
@@ -48,7 +53,7 @@ const SideBar = () => {
 						</Link>
 					))}
 
-					{chats.length === 0 && <p className="text-center text-sm text-muted-foreground">No chat history...</p>}
+					{chats?.length === 0 && <p className="text-center text-sm text-muted-foreground">No chat history...</p>}
 				</div>
 			</div>
 
