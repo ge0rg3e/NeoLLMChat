@@ -1,4 +1,7 @@
-export type Theme = 'dark' | 'light';
+export type Appearance = {
+	theme: 'dark' | 'light';
+	sidebarSide: 'left' | 'right';
+};
 
 export type ActiveRequest = {
 	requestId: string;

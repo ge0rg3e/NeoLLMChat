@@ -13,16 +13,18 @@ interface Props {
 }
 
 const Layout = ({ className, protectedRoute = false, children }: Props) => {
-	const { session } = useApp();
 	const location = useLocation();
+	const { session, appearance } = useApp();
+
+	const isAuthPage = ['/login', '/register'].includes(location.pathname);
 
 	if (protectedRoute === true && session === null) return <Navigate to="/login" replace />;
 
 	return (
 		<Fragment>
-			<div className="flex flex-row">
-				{!['/login', '/register'].includes(location.pathname) && <SideBar />}
-				<main className={twMerge(className)}>{children}</main>
+			<div className={twMerge('flex flex-row', appearance.sidebarSide === 'left' ? 'flex-row' : 'flex-row-reverse')}>
+				{!isAuthPage && <SideBar />}
+				<main className={twMerge('bg-card bg-noise', className, !isAuthPage && 'mt-3.5', appearance.sidebarSide === 'left' ? 'rounded-tl-xl' : 'rounded-tr-xl')}>{children}</main>
 			</div>
 
 			<Settings />

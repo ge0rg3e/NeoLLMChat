@@ -1,7 +1,5 @@
-import Button from '~frontend/components/button';
-import { MoonIcon, SunIcon } from 'lucide-react';
+import { Button } from '~frontend/components/button';
 import { useApp } from '~frontend/lib/context';
-import { twMerge } from '~frontend/lib/utils';
 import { useNavigate } from 'react-router';
 import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
@@ -9,7 +7,7 @@ import { toast } from 'sonner';
 
 const GeneralTab = () => {
 	const navigate = useNavigate();
-	const { session, setSession, theme, setTheme } = useApp();
+	const { session, setSession } = useApp();
 
 	const handleLogout = async () => {
 		await apiClient.auth.logout.post();
@@ -35,7 +33,7 @@ const GeneralTab = () => {
 	if (!session) return null;
 
 	return (
-		<div className="size-full pl-3 pr-7 space-y-5 animate-in fade-in">
+		<div className="size-full pl-3 space-y-5 animate-in fade-in">
 			{/* Account */}
 			<div className="relative flex-start-center gap-x-2 border-b pb-5">
 				{/* Avatar */}
@@ -53,20 +51,6 @@ const GeneralTab = () => {
 				<Button variant="ghost" className="absolute right-0 !text-destructive hover:bg-destructive/5" onClick={handleLogout}>
 					LogOut
 				</Button>
-			</div>
-
-			{/* Theme Selector */}
-			<div className="flex-between-center">
-				<div>Theme</div>
-
-				<div className="flex-end-center gap-x-1">
-					<Button className={twMerge(theme === 'dark' && 'bg-accent')} variant="ghost" size="icon" title="Dark Theme" onClick={() => setTheme('dark')}>
-						<MoonIcon />
-					</Button>
-					<Button className={twMerge(theme === 'light' && 'bg-accent')} variant="ghost" size="icon" title="Light Theme" onClick={() => setTheme('light')}>
-						<SunIcon />
-					</Button>
-				</div>
 			</div>
 
 			{/* Data Control */}

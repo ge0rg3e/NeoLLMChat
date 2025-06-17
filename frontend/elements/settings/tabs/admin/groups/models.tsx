@@ -1,8 +1,8 @@
-import { PencilIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~frontend/components/dialog';
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { Button } from '~frontend/components/button';
+import { Input } from '~frontend/components/input';
 import { useLiveQuery } from 'dexie-react-hooks';
-import Button from '~frontend/components/button';
-import Modal from '~frontend/components/modal';
-import Input from '~frontend/components/input';
 import { Fragment, useState } from 'react';
 import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
@@ -89,29 +89,28 @@ const Models = () => {
 				))}
 			</div>
 
-			<Modal clasName="max-w-[450px] space-y-3 p-5" open={showModal !== null} onOpenChange={(state) => state === false && setShowModal(null)}>
-				<div className="flex-between-center">
-					<h1 className="font-medium">
-						{showModal?.mode === 'add' && 'Add Model'}
-						{showModal?.mode === 'edit' && 'Edit Model'}
-					</h1>
-					<Button variant="ghost" size="sm" title="Close" onClick={() => setShowModal(null)}>
-						<XIcon className="size-5" />
-					</Button>
-				</div>
+			<Dialog open={showModal !== null} onOpenChange={(state) => state === false && setShowModal(null)}>
+				<DialogContent className="max-w-[450px] space-y-3 p-5">
+					<DialogHeader>
+						<DialogTitle>
+							{showModal?.mode === 'add' && 'Add Model'}
+							{showModal?.mode === 'edit' && 'Edit Model'}
+						</DialogTitle>
+					</DialogHeader>
 
-				<form className="space-y-3.5 flex-col flex-center-center" onSubmit={showModal?.mode === 'add' ? handleAddModel : handleEditModel}>
-					<Input type="text" name="model" placeholder="Model (e.g llama3.2)" defaultValue={showModal?.payload?.model} required={showModal?.mode === 'add'} />
-					<Input type="text" name="provider" placeholder="Provider (e.g ollama)" defaultValue={showModal?.payload?.provider} required={showModal?.mode === 'add'} />
-					<Input type="url" name="apiUrl" placeholder="ApiUrl (e.g http://localhost:11434/v1)" defaultValue={showModal?.payload?.apiUrl} required={showModal?.mode === 'add'} />
-					<Input type="password" name="apiKey" placeholder="ApiKey (************************)" required={showModal?.mode === 'add'} />
+					<form className="space-y-3.5 flex-col flex-center-center" onSubmit={showModal?.mode === 'add' ? handleAddModel : handleEditModel}>
+						<Input type="text" name="model" placeholder="Model (e.g llama3.2)" defaultValue={showModal?.payload?.model} required={showModal?.mode === 'add'} />
+						<Input type="text" name="provider" placeholder="Provider (e.g ollama)" defaultValue={showModal?.payload?.provider} required={showModal?.mode === 'add'} />
+						<Input type="url" name="apiUrl" placeholder="ApiUrl (e.g http://localhost:11434/v1)" defaultValue={showModal?.payload?.apiUrl} required={showModal?.mode === 'add'} />
+						<Input type="password" name="apiKey" placeholder="ApiKey (************************)" required={showModal?.mode === 'add'} />
 
-					<Button type="submit" className="w-full mt-3">
-						Submit
-						{showModal?.mode === 'edit' && ' Changes'}
-					</Button>
-				</form>
-			</Modal>
+						<Button type="submit" className="w-full mt-3">
+							Submit
+							{showModal?.mode === 'edit' && ' Changes'}
+						</Button>
+					</form>
+				</DialogContent>
+			</Dialog>
 		</Fragment>
 	);
 };

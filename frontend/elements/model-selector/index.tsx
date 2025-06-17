@@ -1,62 +1,25 @@
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
-import { ChevronsUpDownIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~frontend/components/select';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
-import { twMerge } from '~frontend/lib/utils';
 import db from '~frontend/lib/dexie';
 
-interface Props {
-	orientation?: 'top' | 'bottom' | 'left' | 'right';
-}
-
-const ModelSelector = ({ orientation = 'bottom' }: Props) => {
+const ModelSelector = () => {
 	const { selectedModel, setSelectedModel } = useApp();
 	const models = useLiveQuery(() => db.models.toArray());
 
-	const getOrientationClasses = () => {
-		switch (orientation) {
-			case 'top':
-				return 'bottom-full mb-1';
-			case 'left':
-				return 'right-full mr-1';
-			case 'right':
-				return 'left-full ml-1';
-			case 'bottom':
-			default:
-				return 'mt-1';
-		}
-	};
-
 	return (
-		<Listbox value={selectedModel} onChange={(model) => setSelectedModel(model)}>
-			<div className="relative w-fit">
-				<ListboxButton className="grid w-full grid-cols-1 rounded-lg py-2 px-3 flex-center-center gap-x-2 outline-none border-none transition-smooth hover:bg-accent/30 data-active:bg-accent/30 cursor-pointer">
-					<span className="text-sm">{models?.length ? selectedModel?.model ?? 'Select a model' : 'No models available'}</span>
-					<ChevronsUpDownIcon className="text-muted-foreground size-3.5" />
-				</ListboxButton>
-
-				<ListboxOptions
-					className={twMerge(
-						'absolute z-10 w-full overflow-auto outline-none rounded-md bg-card py-1 shadow-sm border data-leave:transition data-leave:duration-100 data-leave:ease-in data-closed:data-leave:opacity-0',
-						getOrientationClasses()
-					)}
-					transition
-				>
-					{models?.map((model) => (
-						<ListboxOption
-							className={twMerge(
-								'group relative cursor-pointer py-2 px-3 flex-between-center transition-smooth data-focus:bg-primary/10',
-								selectedModel?.id === model.id && 'bg-primary/10'
-							)}
-							value={model}
-							key={model.id}
-						>
-							<span className="text-sm">{model.model}</span>
-						</ListboxOption>
-					))}
-				</ListboxOptions>
-			</div>
-		</Listbox>
+		<Select value={JSON.stringify(selectedModel)} onValueChange={(model) => setSelectedModel(JSON.parse(model))}>
+			<SelectTrigger className="w-fit !h-[32px] shadow-none !bg-transparent !border-none !outline-none !ring-0 hover:!bg-primary/10 cursor-pointer">
+				<SelectValue placeholder={models?.length === 0 ? 'No models yet' : 'Select a model'} />
+			</SelectTrigger>
+			<SelectContent>
+				{models?.map((model) => (
+					<SelectItem key={model.id} value={JSON.stringify(model)}>
+						{model.model}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 };
 

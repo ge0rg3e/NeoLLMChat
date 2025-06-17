@@ -161,7 +161,7 @@ const useChatApi = () => {
 
 					assistantContent += chunkData.content;
 
-					await db.chats.update(chat, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
+					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
 					if (chunkData.done) {
 						await db.activeRequests.delete(requestId);
@@ -169,14 +169,85 @@ const useChatApi = () => {
 						break;
 					}
 				}
-
-				await db.activeRequests.delete(requestId);
-				setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 			} catch (err) {
 				console.error('>> NeoLLMChat - Failed to regenerate message.', err);
+				await db.activeRequests.delete(requestId);
+				setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 			}
 		} catch (err) {
 			console.error('>> NeoLLMChat - Failed to regenerate message.', err);
+		}
+	};
+
+	const editMessage = async (messageId: string, newContent: string) => {
+		if (!chatId) return;
+
+		try {
+			const chat = chats?.find((c) => c.id === chatId);
+			if (!chat || !selectedModel) return;
+
+			const messageIndex = chat.messages.findIndex((m) => m.id === messageId);
+			if (messageIndex === -1) return;
+
+			// Update the message content
+			const updatedMessages = [...chat.messages];
+			updatedMessages[messageIndex] = { ...updatedMessages[messageIndex], content: newContent.trim() };
+
+			// Update chat with new message content
+			await db.chats.update(chatId, { messages: updatedMessages });
+
+			// Regenerate response by keeping messages up to and including the edited message
+			const messagesToKeep = updatedMessages.slice(0, messageIndex + 1);
+			if (!messagesToKeep.length) return;
+
+			// Create new request
+			const requestId = uuid();
+			const abortController = new AbortController();
+			await db.activeRequests.add({ requestId, chatId });
+			setAbortControllers((prev) => [...prev, { requestId, controller: abortController }]);
+
+			try {
+				const response = await apiClient.chat.post(
+					{
+						chatId,
+						requestId,
+						modelId: selectedModel.id,
+						messages: messagesToKeep
+					},
+					{ fetch: { signal: abortController.signal } }
+				);
+
+				if (!response.data) {
+					await db.activeRequests.delete(requestId);
+					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
+					return;
+				}
+
+				// Process streaming response
+				let assistantContent = '';
+				const assistantMessageId = uuid();
+
+				for await (const chunk of response.data as any) {
+					const chunkData = parseResponseStream(chunk);
+					if (!chunkData) continue;
+
+					assistantContent += chunkData.content;
+
+					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
+
+					if (chunkData.done) {
+						await db.activeRequests.delete(requestId);
+						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
+						break;
+					}
+				}
+			} catch (err) {
+				console.error('>> NeoLLMChat - Failed to regenerate edited message.', err);
+				await db.activeRequests.delete(requestId);
+				setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
+			}
+		} catch (err) {
+			console.error('>> NeoLLMChat - Failed to edit message.', err);
 		}
 	};
 
@@ -184,7 +255,8 @@ const useChatApi = () => {
 		chatId,
 		regenerateMessage,
 		sendMessage,
-		stopRequest
+		stopRequest,
+		editMessage
 	};
 };
 

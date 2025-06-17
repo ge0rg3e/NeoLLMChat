@@ -1,11 +1,12 @@
-import { Settings2Icon, UserCogIcon, XIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~frontend/components/dialog';
+import { InfoIcon, PaintBucketIcon, Settings2Icon, UserCogIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
-import Button from '~frontend/components/button';
-import Modal from '~frontend/components/modal';
 import { useApp } from '~frontend/lib/context';
+import AppearanceTab from './tabs/appearance';
 import { twMerge } from '~frontend/lib/utils';
 import GeneralTab from './tabs/general';
 import AdminTab from './tabs/admin';
+import AboutTab from './tabs/about';
 import { useEffect } from 'react';
 
 const tabs = [
@@ -16,10 +17,22 @@ const tabs = [
 		Content: GeneralTab
 	},
 	{
+		id: 'appearance',
+		label: 'Appearance',
+		icon: PaintBucketIcon,
+		Content: AppearanceTab
+	},
+	{
 		id: 'admin',
 		label: 'Admin',
 		icon: UserCogIcon,
 		Content: AdminTab
+	},
+	{
+		id: 'about',
+		label: 'About',
+		icon: InfoIcon,
+		Content: AboutTab
 	}
 ];
 
@@ -52,41 +65,38 @@ const Settings = () => {
 	const tab = tabs.find((tab) => tab.id === settingsTab);
 
 	return (
-		<Modal clasName="max-w-[760px] min-h-[500px]" open={Boolean(tab)} onOpenChange={(state) => state === false && handleClose()}>
-			{/* Header */}
-			<div className="flex-between-center px-6 py-4">
-				<h1 className="font-medium text-xl">Settings</h1>
+		<Dialog open={Boolean(tab)} onOpenChange={(state) => state === false && handleClose()}>
+			<DialogContent className="size-full !max-w-[760px] !max-h-[500px]">
+				<DialogHeader>
+					<DialogTitle>Settings</DialogTitle>
+				</DialogHeader>
 
-				<Button variant="ghost" size="sm" title="Close" onClick={handleClose}>
-					<XIcon className="size-5" />
-				</Button>
-			</div>
+				<div className="h-[400px] flex flex-row gap-x-3">
+					{/* Tabs */}
+					<div className="size-full max-w-[180px] space-y-1.5">
+						{tabs.map((tab) => {
+							if (tab.id === 'admin' && session?.role !== 'admin') return null;
 
-			<div className="flex flex-row gap-x-3">
-				{/* Tabs */}
-				<div className="size-full max-w-[180px] space-y-1.5 pl-3 pb-3">
-					{tabs.map((tab) => {
-						if (tab.id === 'admin' && session?.role !== 'admin') return null;
+							return (
+								<button
+									className={twMerge(
+										'w-full h-9 text-sm rounded-lg px-3 flex-start-center gap-x-2 cursor-pointer transition-smooth hover:bg-accent',
+										settingsTab === tab.id && 'bg-accent'
+									)}
+									onClick={() => handleChangeTab(tab.id)}
+									key={tab.id}
+								>
+									{tab.icon && <tab.icon className="size-4.5" />}
+									{tab.label}
+								</button>
+							);
+						})}
+					</div>
 
-						return (
-							<button
-								className={twMerge(
-									'w-full h-9 text-sm rounded-lg px-3 flex-start-center gap-x-2 cursor-pointer transition-smooth hover:bg-accent',
-									settingsTab === tab.id && 'bg-accent'
-								)}
-								onClick={() => handleChangeTab(tab.id)}
-								key={tab.id}
-							>
-								{tab.icon && <tab.icon className="size-4.5" />}
-								{tab.label}
-							</button>
-						);
-					})}
+					{(tab?.id !== 'admin' || session?.role === 'admin') && tab && <tab.Content />}
 				</div>
-
-				{(tab?.id !== 'admin' || session?.role === 'admin') && tab && <tab.Content />}
-			</div>
-		</Modal>
+			</DialogContent>
+		</Dialog>
 	);
 };
 

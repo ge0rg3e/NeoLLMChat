@@ -1,5 +1,5 @@
 import type { Attachment } from '~frontend/lib/types';
-import Button from '~frontend/components/button';
+import { Button } from '~frontend/components/button';
 import { LinkIcon, XIcon } from 'lucide-react';
 import { useApp } from '~frontend/lib/context';
 import { Fragment, useRef } from 'react';
@@ -40,7 +40,7 @@ export const AttachmentsTrigger = () => {
 
 	return (
 		<Fragment>
-			<Button variant="ghost" size="icon" title="Attach a file" onClick={() => fileInputRef.current?.click()}>
+			<Button variant="ghost" size="icon" title="Attach a file" className="hover:!bg-primary/10" onClick={() => fileInputRef.current?.click()}>
 				<LinkIcon />
 			</Button>
 

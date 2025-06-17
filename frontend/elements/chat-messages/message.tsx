@@ -1,9 +1,9 @@
-import { CopyIcon, PencilIcon, RefreshCcwIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, PencilIcon, RefreshCcwIcon, XIcon } from 'lucide-react';
 import type { Message as _Message } from '~frontend/lib/types';
 import { Fragment, useEffect, useState } from 'react';
+import { Button } from '~frontend/components/button';
 import { markedHighlight } from 'marked-highlight';
 import { useLiveQuery } from 'dexie-react-hooks';
-import Button from '~frontend/components/button';
 import useChatApi from '../chat-input/api';
 import db from '~frontend/lib/dexie';
 import * as cheerio from 'cheerio';
@@ -15,7 +15,9 @@ type Props = {
 };
 
 const Message = ({ data }: Props) => {
-	const { chatId, regenerateMessage } = useChatApi();
+	const [isEditing, setIsEditing] = useState(false);
+	const { chatId, regenerateMessage, editMessage } = useChatApi();
+	const [editedContent, setEditedContent] = useState(data.content);
 	const [formattedContent, setFormattedContent] = useState<string>('');
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
@@ -61,11 +63,34 @@ const Message = ({ data }: Props) => {
 		formatContent();
 	}, [data]);
 
+	const handleEditSave = async () => {
+		if (editedContent.trim() === data.content) {
+			setIsEditing(false);
+			return;
+		}
+
+		await editMessage(data.id, editedContent);
+		setIsEditing(false);
+	};
+
+	const handleEditCancel = () => {
+		setEditedContent(data.content);
+		setIsEditing(false);
+	};
+
 	const activeRequest = activeRequests?.find((r) => r.chatId === chatId);
 
 	return (
 		<div className="w-full max-w-[755px] mx-auto space-y-2">
-			{data.role === 'user' ? <p className="bg-card rounded-xl py-2 px-3 w-fit">{data.content}</p> : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formattedContent }} />}
+			{data.role === 'user' && isEditing ? (
+				<div className="bg-card rounded-xl py-2 px-3 w-fit">
+					<textarea className="w-full size-fit bg-transparent resize-none outline-none" value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
+				</div>
+			) : data.role === 'user' ? (
+				<p className="bg-accent/50 rounded-xl py-2 px-3 w-fit">{data.content}</p>
+			) : (
+				<div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+			)}
 
 			{/* Attachments  */}
 			{data.attachments.length !== 0 && (
@@ -92,6 +117,17 @@ const Message = ({ data }: Props) => {
 			{/* Options */}
 			{!activeRequest && (
 				<div className="flex-start-center gap-x-1 -mx-2">
+					{isEditing && (
+						<Fragment>
+							<Button variant="ghost" size="icon" title="Save" onClick={handleEditSave}>
+								<CheckIcon />
+							</Button>
+							<Button variant="ghost" size="icon" title="Cancel" onClick={handleEditCancel}>
+								<XIcon />
+							</Button>
+						</Fragment>
+					)}
+
 					{data.role === 'assistant' && (
 						<Fragment>
 							<Button variant="ghost" size="icon" title="Regenerate" onClick={async () => await regenerateMessage(data.id)}>
@@ -100,17 +136,19 @@ const Message = ({ data }: Props) => {
 						</Fragment>
 					)}
 
-					{data.role === 'user' && (
+					{data.role === 'user' && !isEditing && (
 						<Fragment>
-							<Button variant="ghost" size="icon" title="Edit">
+							<Button variant="ghost" size="icon" title="Edit" onClick={() => setIsEditing(true)}>
 								<PencilIcon />
 							</Button>
 						</Fragment>
 					)}
 
-					<Button variant="ghost" size="icon" title="Copy" onClick={() => navigator.clipboard.writeText(data.content)}>
-						<CopyIcon />
-					</Button>
+					{!isEditing && (
+						<Button variant="ghost" size="icon" title="Copy" onClick={() => navigator.clipboard.writeText(data.content)}>
+							<CopyIcon />
+						</Button>
+					)}
 				</div>
 			)}
 		</div>

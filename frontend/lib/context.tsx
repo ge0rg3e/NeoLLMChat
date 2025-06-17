@@ -1,4 +1,4 @@
-import type { _AbortController, Chat, ChatInput, Model, Session, Theme } from './types';
+import type { _AbortController, Appearance, Chat, ChatInput, Model, Session } from './types';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import apiClient from './api';
 import db from './dexie';
@@ -18,8 +18,8 @@ interface ContextData {
 	session: Session;
 	setSession: SetState<Session>;
 
-	theme: Theme;
-	setTheme: (theme: Theme) => void;
+	appearance: Appearance;
+	setAppearance: (params: Partial<Appearance>) => void;
 }
 
 const getSession = async () => {
@@ -47,16 +47,25 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 	const [abortControllers, setAbortControllers] = useState<_AbortController[]>([]);
 	const [selectedModel, setSelectedModel] = useState<Model>({} as any);
 	const [session, setSession] = useState<Session>(undefined);
-	const [theme, _setTheme] = useState<Theme>('dark');
+	const [appearance, _setAppearance] = useState<Appearance>({
+		sidebarSide: 'left',
+		theme: 'dark'
+	});
+
+	const setAppearance = (params: Partial<Appearance>) => {
+		const newAppearance = { ...appearance, ...params };
+		_setAppearance(newAppearance);
+		localStorage.setItem('appearance', JSON.stringify(newAppearance));
+	};
 
 	const onLoad = async () => {
+		// Get appearance
+		const appearanceParsed = JSON.parse(localStorage.getItem('appearance') ?? 'null');
+		if (appearanceParsed) _setAppearance(appearanceParsed);
+
 		// Get session
 		const session = await getSession();
 		setSession(session);
-
-		// Get theme
-		const theme = (localStorage.getItem('theme') as Theme) ?? 'dark';
-		setTheme(theme);
 
 		// Request sync
 		await requestSync();
@@ -66,8 +75,16 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		const { data } = await apiClient.sync.get();
 		if (!data) return;
 
-		await Promise.all([db.chats.clear(), db.models.clear()]);
-		await Promise.all([db.chats.bulkAdd(data.chats as Chat[]), db.models.bulkAdd(data.models as Model[])]);
+		await Promise.all([
+			db.transaction('rw', db.chats, async () => {
+				await db.chats.clear();
+				await db.chats.bulkAdd(data.chats as Chat[]);
+			}),
+			db.transaction('rw', db.models, async () => {
+				await db.models.clear();
+				await db.models.bulkAdd(data.models as Model[]);
+			})
+		]);
 
 		setSelectedModel(data.models[0] ?? null);
 	};
@@ -76,13 +93,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		onLoad();
 	}, []);
 
-	const setTheme = (theme: Theme) => {
-		_setTheme(theme);
-		localStorage.setItem('theme', theme);
-	};
-
 	useEffect(() => {
-		if (theme === 'dark') {
+		if (appearance.theme === 'dark') {
 			document.documentElement.classList.remove('neollmchat-light');
 			document.documentElement.classList.add('neollmchat-dark');
 			document.documentElement.style.colorScheme = 'dark';
@@ -91,7 +103,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 			document.documentElement.classList.add('neollmchat-light');
 			document.documentElement.style.colorScheme = 'light';
 		}
-	}, [theme]);
+	}, [appearance.theme]);
 
 	return (
 		<AppContext.Provider
@@ -104,8 +116,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 				setSelectedModel,
 				session,
 				setSession,
-				theme,
-				setTheme
+				appearance,
+				setAppearance
 			}}
 		>
 			{children}

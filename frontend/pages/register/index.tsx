@@ -1,5 +1,5 @@
-import Button from '~frontend/components/button';
-import Input from '~frontend/components/input';
+import { Button } from '~frontend/components/button';
+import { Input } from '~frontend/components/input';
 import Layout from '~frontend/elements/layout';
 import { useNavigate } from 'react-router';
 import apiClient from '~frontend/lib/api';

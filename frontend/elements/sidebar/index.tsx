@@ -24,7 +24,7 @@ const SideBar = () => {
 	};
 
 	return (
-		<aside className="w-full max-w-[270px] h-screen p-3 bg-card flex-col flex-between-center">
+		<aside className="w-full max-w-[270px] h-screen p-3 bg-background flex-col flex-between-center">
 			{/* Top */}
 			<div className="w-full space-y-5">
 				{/* New Chat */}
