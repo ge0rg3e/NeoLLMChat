@@ -5,7 +5,7 @@ const AboutTab = () => {
 	const [isLatestVersion, setIsLatestVersion] = useState<boolean | undefined>(undefined);
 
 	const checkVersion = async () => {
-		const response = await fetch('https://raw.githubusercontent.com/ge0rg3e/neo-llm-chat/main/package.json');
+		const response = await fetch('https://raw.githubusercontent.com/ge0rg3e/neollmchat/main/package.json');
 		const json = await response.json();
 
 		setIsLatestVersion(json.version === packageJson.version);

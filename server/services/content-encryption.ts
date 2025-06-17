@@ -1,31 +1,76 @@
-import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { randomBytes, subtle } from 'crypto';
 
-const key = Buffer.from(Bun.env.CONTENT_ENCRYPTION_KEY!, 'hex');
-const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 12;
-const TAG_LENGTH = 16;
+const ENCRYPTION_KEY = process.env.CONTENT_ENCRYPTION_KEY;
+if (!ENCRYPTION_KEY) {
+	throw new Error('CONTENT_ENCRYPTION_KEY environment variable is not set');
+}
 
-export const encryptContent = (input: string): string => {
-	const iv = randomBytes(IV_LENGTH);
-	const cipher = createCipheriv(ALGORITHM, key, iv);
-
-	const encrypted = Buffer.concat([cipher.update(input, 'utf8'), cipher.final()]);
-	const tag = cipher.getAuthTag();
-
-	const payload = Buffer.concat([iv, tag, encrypted]);
-	return payload.toString('base64');
+export const deriveKey = async (salt: Uint8Array) => {
+	const enc = new TextEncoder();
+	const keyMaterial = await subtle.importKey('raw', enc.encode(ENCRYPTION_KEY), 'PBKDF2', false, ['deriveBits', 'deriveKey']);
+	return subtle.deriveKey(
+		{
+			name: 'PBKDF2',
+			salt,
+			iterations: 100000,
+			hash: 'SHA-256'
+		},
+		keyMaterial,
+		{ name: 'AES-GCM', length: 256 },
+		true,
+		['encrypt', 'decrypt']
+	);
 };
 
-export const decryptContent = (input: string): string => {
-	const payload = Buffer.from(input, 'base64');
+export const encryptContent = async (input: string) => {
+	try {
+		const enc = new TextEncoder();
+		const salt = randomBytes(16);
+		const iv = randomBytes(12);
+		const key = await deriveKey(salt);
 
-	const iv = payload.slice(0, IV_LENGTH);
-	const tag = payload.slice(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
-	const encrypted = payload.slice(IV_LENGTH + TAG_LENGTH);
+		const encrypted = await subtle.encrypt(
+			{
+				name: 'AES-GCM',
+				iv
+			},
+			key,
+			enc.encode(input)
+		);
 
-	const decipher = createDecipheriv(ALGORITHM, key, iv);
-	decipher.setAuthTag(tag);
+		// Combine salt, iv, and encrypted data
+		const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+		combined.set(salt, 0);
+		combined.set(iv, salt.length);
+		combined.set(new Uint8Array(encrypted), salt.length + iv.length);
 
-	const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-	return decrypted.toString('utf8');
+		// Convert to base64 for string output
+		return Buffer.from(combined).toString('base64');
+	} catch (error) {
+		throw new Error(`Encryption failed: ${error}`);
+	}
+};
+
+export const decryptContent = async (input: string) => {
+	try {
+		const combined = Buffer.from(input, 'base64');
+		const salt = combined.subarray(0, 16);
+		const iv = combined.subarray(16, 28);
+		const encryptedData = combined.subarray(28);
+
+		const key = await deriveKey(salt);
+
+		const decrypted = await subtle.decrypt(
+			{
+				name: 'AES-GCM',
+				iv
+			},
+			key,
+			encryptedData
+		);
+
+		return new TextDecoder().decode(decrypted);
+	} catch (error) {
+		throw new Error(`Decryption failed: ${error}`);
+	}
 };

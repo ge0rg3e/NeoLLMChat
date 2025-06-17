@@ -1,5 +1,5 @@
 {
-	"name": "neo-llm-chat",
+	"name": "neollmchat",
 	"version": "0.0.4",
 	"author": "Ge0rg3e",
 	"module": "src/index.js",

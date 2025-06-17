@@ -7,7 +7,7 @@ interface ChatDexie extends Dexie {
 	activeRequests: Table<ActiveRequest>;
 }
 
-const db = new Dexie('neo-llm-chat') as ChatDexie;
+const db = new Dexie('neollmchat') as ChatDexie;
 
 db.version(1).stores({
 	chats: 'id, title, createdBy, createdAt',

@@ -5,6 +5,6 @@ yarn-error.log*
 npm-debug.log*
 /node_modules
 **/*.bun
-drizzle
 /build
+/data
 .env
