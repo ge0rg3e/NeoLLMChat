@@ -1,7 +1,7 @@
-import type { Attachment } from '~shared/types';
+import type { Attachment } from '~frontend/lib/types';
 import Button from '~frontend/components/button';
-import { useApp } from '~frontend/lib/context';
 import { LinkIcon, XIcon } from 'lucide-react';
+import { useApp } from '~frontend/lib/context';
 import { Fragment, useRef } from 'react';
 import { toast } from 'sonner';
 

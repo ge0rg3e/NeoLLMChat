@@ -2,13 +2,12 @@ import Button from '~frontend/components/button';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
-import { useSync } from '~frontend/lib/sync';
 import { useNavigate } from 'react-router';
 import apiClient from '~frontend/lib/api';
+import db from '~frontend/lib/dexie';
 import { toast } from 'sonner';
 
 const GeneralTab = () => {
-	const { db } = useSync();
 	const navigate = useNavigate();
 	const { session, setSession, theme, setTheme } = useApp();
 

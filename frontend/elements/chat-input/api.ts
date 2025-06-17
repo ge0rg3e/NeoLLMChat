@@ -1,13 +1,12 @@
 import apiClient, { parseResponseStream } from '~frontend/lib/api';
+import type { Chat, Message } from '~frontend/lib/types';
 import { useNavigate, useParams } from 'react-router';
-import type { Chat, Message } from '~shared/types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
-import { useSync } from '~frontend/lib/sync';
+import db from '~frontend/lib/dexie';
 import { v4 as uuid } from 'uuid';
 
 const useChatApi = () => {
-	const { db } = useSync();
 	const navigate = useNavigate();
 	const { id: chatId } = useParams();
 	const { abortControllers, setAbortControllers, selectedModel, chatInput, setChatInput, session } = useApp();

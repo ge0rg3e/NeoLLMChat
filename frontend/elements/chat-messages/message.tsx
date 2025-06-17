@@ -1,11 +1,11 @@
 import { CopyIcon, PencilIcon, RefreshCcwIcon } from 'lucide-react';
-import type { Message as _Message } from '~shared/types';
+import type { Message as _Message } from '~frontend/lib/types';
 import { Fragment, useEffect, useState } from 'react';
 import { markedHighlight } from 'marked-highlight';
 import { useLiveQuery } from 'dexie-react-hooks';
 import Button from '~frontend/components/button';
-import { useSync } from '~frontend/lib/sync';
 import useChatApi from '../chat-input/api';
+import db from '~frontend/lib/dexie';
 import * as cheerio from 'cheerio';
 import { Marked } from 'marked';
 import hljs from 'highlight.js';
@@ -15,7 +15,6 @@ type Props = {
 };
 
 const Message = ({ data }: Props) => {
-	const { db } = useSync();
 	const { chatId, regenerateMessage } = useChatApi();
 	const [formattedContent, setFormattedContent] = useState<string>('');
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());

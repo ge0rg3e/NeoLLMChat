@@ -5,13 +5,12 @@ import Button from '~frontend/components/button';
 import { useApp } from '~frontend/lib/context';
 import ModelSelector from '../model-selector';
 import { twMerge } from '~frontend/lib/utils';
-import { useSync } from '~frontend/lib/sync';
 import { useLocation } from 'react-router';
+import db from '~frontend/lib/dexie';
 import { useMemo } from 'react';
 import useChatApi from './api';
 
 const ChatInput = () => {
-	const { db } = useSync();
 	const { pathname } = useLocation();
 	const { chatInput, setChatInput } = useApp();
 	const { chatId, sendMessage, stopRequest } = useChatApi();

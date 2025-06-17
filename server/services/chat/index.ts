@@ -1,5 +1,5 @@
 import { closeStream, getModel, getOrCreateChat, saveMessages, SYSTEM_PROMPT } from './helpers';
-import type { Chat } from '~shared/types';
+import type { Chat } from '~frontend/lib/types';
 import { Stream } from '@elysiajs/stream';
 import authPlugin from '../auth/plugin';
 import Elysia, { t } from 'elysia';
@@ -8,7 +8,6 @@ import OpenAI from 'openai';
 
 const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
-	.get('/models', async () => await db.model.findMany({ select: { id: true, model: true, provider: true, apiUrl: true } }))
 	.post(
 		'/chat',
 		async ({ body, request, user }) => {

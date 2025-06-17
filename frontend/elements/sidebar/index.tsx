@@ -2,13 +2,12 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
-import { useSync } from '~frontend/lib/sync';
 import { Trash2Icon } from 'lucide-react';
 import apiClient from '~frontend/lib/api';
+import db from '~frontend/lib/dexie';
 import { toast } from 'sonner';
 
 const SideBar = () => {
-	const { db } = useSync();
 	const { session } = useApp();
 	const navigate = useNavigate();
 	const location = useLocation();

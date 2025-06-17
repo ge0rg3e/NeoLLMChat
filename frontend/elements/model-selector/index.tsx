@@ -1,14 +1,17 @@
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
 import { ChevronsUpDownIcon } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
 import { twMerge } from '~frontend/lib/utils';
+import db from '~frontend/lib/dexie';
 
 interface Props {
 	orientation?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 const ModelSelector = ({ orientation = 'bottom' }: Props) => {
-	const { models, selectedModel, setSelectedModel } = useApp();
+	const { selectedModel, setSelectedModel } = useApp();
+	const models = useLiveQuery(() => db.models.toArray());
 
 	const getOrientationClasses = () => {
 		switch (orientation) {
@@ -28,7 +31,7 @@ const ModelSelector = ({ orientation = 'bottom' }: Props) => {
 		<Listbox value={selectedModel} onChange={(model) => setSelectedModel(model)}>
 			<div className="relative w-fit">
 				<ListboxButton className="grid w-full grid-cols-1 rounded-lg py-2 px-3 flex-center-center gap-x-2 outline-none border-none transition-smooth hover:bg-accent/30 data-active:bg-accent/30 cursor-pointer">
-					<span className="text-sm">{models.length ? selectedModel?.model ?? 'Select a model' : 'No models available'}</span>
+					<span className="text-sm">{models?.length ? selectedModel?.model ?? 'Select a model' : 'No models available'}</span>
 					<ChevronsUpDownIcon className="text-muted-foreground size-3.5" />
 				</ListboxButton>
 
@@ -39,7 +42,7 @@ const ModelSelector = ({ orientation = 'bottom' }: Props) => {
 					)}
 					transition
 				>
-					{models.map((model) => (
+					{models?.map((model) => (
 						<ListboxOption
 							className={twMerge(
 								'group relative cursor-pointer py-2 px-3 flex-between-center transition-smooth data-focus:bg-primary/10',

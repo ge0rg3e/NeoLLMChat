@@ -1,24 +1,9 @@
 export type Theme = 'dark' | 'light';
 
-export type ChatInput = {
-	text: string;
-	attachments: Array<Attachment>;
-};
-
 export type ActiveRequest = {
-	abortController: AbortController;
 	requestId: string;
 	chatId: string;
 };
-
-export type Session =
-	| {
-			id: string;
-			username: string;
-			role: 'admin' | 'user';
-	  }
-	| null
-	| undefined;
 
 export type Model = {
 	model: string;
@@ -46,4 +31,23 @@ export type Chat = {
 	messages: Array<Message>;
 	createdBy: string;
 	createdAt: Date;
+};
+
+export type Session =
+	| {
+			id: string;
+			username: string;
+			role: 'admin' | 'user';
+	  }
+	| null
+	| undefined;
+
+export type ChatInput = {
+	text: string;
+	attachments: Array<Attachment>;
+};
+
+export type _AbortController = {
+	requestId: string;
+	controller: AbortController;
 };

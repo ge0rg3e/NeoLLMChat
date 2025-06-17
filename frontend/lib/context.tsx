@@ -1,27 +1,9 @@
+import type { _AbortController, Chat, ChatInput, Model, Session, Theme } from './types';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Attachment, Model, Theme } from '~shared/types';
 import apiClient from './api';
+import db from './dexie';
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
-
-export type Session =
-	| {
-			id: string;
-			username: string;
-			role: 'admin' | 'user';
-	  }
-	| null
-	| undefined;
-
-type ChatInput = {
-	text: string;
-	attachments: Array<Attachment>;
-};
-
-type _AbortController = {
-	requestId: string;
-	controller: AbortController;
-};
 
 interface ContextData {
 	abortControllers: _AbortController[];
@@ -30,8 +12,6 @@ interface ContextData {
 	chatInput: ChatInput;
 	setChatInput: SetState<ChatInput>;
 
-	models: Model[];
-	setModels: SetState<Model[]>;
 	selectedModel: Model;
 	setSelectedModel: SetState<Model>;
 
@@ -63,30 +43,33 @@ export const useApp = () => {
 };
 
 const AppContextProvider = ({ children }: { children: ReactNode }) => {
+	const [chatInput, setChatInput] = useState<ChatInput>({ text: '', attachments: [] });
 	const [abortControllers, setAbortControllers] = useState<_AbortController[]>([]);
-	const [chatInput, setChatInput] = useState<ChatInput>({
-		text: '',
-		attachments: []
-	});
-	const [models, setModels] = useState<Model[]>([]);
 	const [selectedModel, setSelectedModel] = useState<Model>({} as any);
 	const [session, setSession] = useState<Session>(undefined);
 	const [theme, _setTheme] = useState<Theme>('dark');
 
 	const onLoad = async () => {
-		try {
-			const session = await getSession();
-			setSession(session);
+		// Get session
+		const session = await getSession();
+		setSession(session);
 
-			if (session) {
-				const theme = (localStorage.getItem('theme') as Theme) ?? 'dark';
-				setTheme(theme);
+		// Get theme
+		const theme = (localStorage.getItem('theme') as Theme) ?? 'dark';
+		setTheme(theme);
 
-				const { data: models } = await apiClient.models.get();
-				setModels(models ?? []);
-				setSelectedModel(models![0] ?? null);
-			}
-		} catch {}
+		// Request sync
+		await requestSync();
+	};
+
+	const requestSync = async () => {
+		const { data } = await apiClient.sync.get();
+		if (!data) return;
+
+		await Promise.all([db.chats.clear(), db.models.clear()]);
+		await Promise.all([db.chats.bulkAdd(data.chats as Chat[]), db.models.bulkAdd(data.models as Model[])]);
+
+		setSelectedModel(data.models[0] ?? null);
 	};
 
 	useEffect(() => {
@@ -117,8 +100,6 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 				setAbortControllers,
 				chatInput,
 				setChatInput,
-				models,
-				setModels,
 				selectedModel,
 				setSelectedModel,
 				session,

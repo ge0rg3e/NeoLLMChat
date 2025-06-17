@@ -20,10 +20,9 @@
 		"noUncheckedSideEffectImports": true,
 		"baseUrl": ".",
 		"paths": {
-			"~shared/*": ["../shared/*"],
 			"~server/*": ["../server/*"],
 			"~frontend/*": ["../frontend/*"]
 		}
 	},
-	"include": ["./", "../vite.config.ts", "../shared/types.ts"]
+	"include": ["./", "../vite.config.ts"]
 }

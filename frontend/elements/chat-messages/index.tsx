@@ -1,10 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useSync } from '~frontend/lib/sync';
 import { useParams } from 'react-router';
+import db from '~frontend/lib/dexie';
 import Message from './message';
 
 const ChatMessages = () => {
-	const { db } = useSync();
 	const params = useParams();
 	const chats = useLiveQuery(() => db.chats.toArray());
 	const chat = chats?.find((chat) => chat.id === params.id);

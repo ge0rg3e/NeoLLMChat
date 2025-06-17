@@ -1,14 +1,15 @@
 import { PencilIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import Button from '~frontend/components/button';
-import Input from '~frontend/components/input';
-import { useApp } from '~frontend/lib/context';
 import Modal from '~frontend/components/modal';
+import Input from '~frontend/components/input';
 import { Fragment, useState } from 'react';
 import apiClient from '~frontend/lib/api';
+import db from '~frontend/lib/dexie';
 import { toast } from 'sonner';
 
 const Models = () => {
-	const { models, setModels } = useApp();
+	const models = useLiveQuery(() => db.models.toArray());
 	const [showModal, setShowModal] = useState<{ mode: 'add' | 'edit'; payload?: any } | null>(null);
 
 	const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,7 +25,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		setModels((prev) => [...prev, data.data!]);
+		await db.models.put(data.data!);
 		toast.success('You have successfully added a new model.');
 	};
 
@@ -42,7 +43,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		setModels((prev) => prev.map((m) => (m.id === data.data!.id ? data.data! : m)));
+		await db.models.put(data.data!);
 		toast.success('You have successfully updated this model.');
 	};
 
@@ -54,7 +55,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		setShowModal(null);
-		setModels((prev) => prev.filter((m) => m.id !== id));
+		await db.models.delete(id);
 		toast.success('You have successfully deleted this model.');
 	};
 
@@ -68,7 +69,7 @@ const Models = () => {
 					</Button>
 				</div>
 
-				{models.map((model) => (
+				{models?.map((model) => (
 					<div key={model.id} className="w-full h-14 bg-accent flex-between-center gap-x-2 text-sm px-3 rounded-lg">
 						<div className="flex flex-col items-start">
 							<div>{model.model}</div>
