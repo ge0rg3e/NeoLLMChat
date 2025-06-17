@@ -1,5 +1,5 @@
 import { decryptContent } from '../content-encryption';
-import type { Message } from '../../../shared/types';
+import type { Message } from '~frontend/lib/types';
 import { v4 as uuid } from 'uuid';
 import db from '../database';
 
@@ -42,8 +42,8 @@ export const closeStream = (stream: any, isStreamClosed: boolean) => {
 	return true;
 };
 
-export const getModel = async (id: string) => {
-	const model = await db.model.findUnique({ where: { id } });
+export const getModel = async (id?: string) => {
+	const model = id ? await db.model.findUnique({ where: { id } }) : await db.model.findFirst();
 	if (!model) return null;
 
 	const decryptedApiKey = (await decryptContent(model.apiKey)) as string;

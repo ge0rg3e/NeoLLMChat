@@ -1,5 +1,5 @@
 import { closeStream, getModel, getOrCreateChat, saveMessages, SYSTEM_PROMPT } from './helpers';
-import type { Chat } from '~frontend/lib/types';
+import type { Chat, Message } from '~frontend/lib/types';
 import { Stream } from '@elysiajs/stream';
 import authPlugin from '../auth/plugin';
 import Elysia, { t } from 'elysia';
@@ -119,6 +119,7 @@ const chatService = new Elysia({ prefix: '/api' })
 			})
 		}
 	)
+
 	.delete(
 		'/chat',
 		async ({ body, user, set }) => {

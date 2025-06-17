@@ -160,6 +160,7 @@ const useChatApi = () => {
 					if (!chunkData) continue;
 
 					assistantContent += chunkData.content;
+
 					await db.chats.update(chat, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
 					if (chunkData.done) {
@@ -168,6 +169,7 @@ const useChatApi = () => {
 						break;
 					}
 				}
+
 				await db.activeRequests.delete(requestId);
 				setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 			} catch (err) {
