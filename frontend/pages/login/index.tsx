@@ -1,8 +1,9 @@
 import { Button } from '~frontend/components/button';
 import { Input } from '~frontend/components/input';
-import Layout from '~frontend/elements/layout';
+import { Label } from '~frontend/components/label';
+import { Link, useNavigate } from 'react-router';
 import { useApp } from '~frontend/lib/context';
-import { useNavigate } from 'react-router';
+import Layout from '~frontend/elements/layout';
 import apiClient from '~frontend/lib/api';
 import { toast } from 'sonner';
 
@@ -35,12 +36,26 @@ const Login = () => {
 						<p className="text-muted-foreground text-center font-semibold text-2xl mb-6">Log in to NeoLLMChat.</p>
 
 						<form className="w-full space-y-3.5 flex-col flex-center-center" onSubmit={handleSubmit}>
-							<Input type="text" name="username" placeholder="Your username" required />
-							<Input type="password" name="password" placeholder="Your password" required />
+							<div className="w-full space-y-2">
+								<Label htmlFor="username">Username</Label>
+								<Input type="text" name="username" id="username" placeholder="your-username" required />
+							</div>
+
+							<div className="w-full space-y-2">
+								<Label htmlFor="password">Password</Label>
+								<Input type="password" name="password" id="password" placeholder="∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗" required />
+							</div>
 
 							<Button className="mt-3 w-full" type="submit">
 								Log in
 							</Button>
+
+							<p className="text-center text-sm text-muted-foreground">
+								Don't have an account?{' '}
+								<Link to="/register" className="underline text-primary">
+									Register
+								</Link>
+							</p>
 						</form>
 					</div>
 				</div>

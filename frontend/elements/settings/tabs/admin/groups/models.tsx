@@ -1,9 +1,12 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~frontend/components/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~frontend/components/dialog';
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { LockIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button } from '~frontend/components/button';
 import { Input } from '~frontend/components/input';
+import { Label } from '~frontend/components/label';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Fragment, useState } from 'react';
+import registeredPresets from './presets';
 import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
 import { toast } from 'sonner';
@@ -11,15 +14,37 @@ import { toast } from 'sonner';
 const Models = () => {
 	const models = useLiveQuery(() => db.models.toArray());
 	const [showModal, setShowModal] = useState<{ mode: 'add' | 'edit'; payload?: any } | null>(null);
+	const [provider, setProvider] = useState('');
+	const [apiUrl, setApiUrl] = useState('');
+	const [apiKey, setApiKey] = useState('');
+	const [model, setModel] = useState('');
+
+	const handlePresetChange = (value: string) => {
+		const preset = registeredPresets.find((preset) => preset.value === value);
+		if (!preset) return;
+
+		setModel(preset.model);
+		setProvider(preset.provider);
+		setApiUrl(preset.apiUrl);
+		setApiKey(preset.apiKey ?? '');
+	};
+
+	useEffect(() => {
+		if (showModal?.mode === 'edit' && showModal.payload) {
+			setModel(showModal.payload.model);
+			setProvider(showModal.payload.provider);
+			setApiUrl(showModal.payload.apiUrl);
+			setApiKey(showModal.payload.apiKey);
+		} else {
+			setModel('');
+			setProvider('');
+			setApiUrl('');
+			setApiKey('');
+		}
+	}, [showModal]);
 
 	const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-
-		const form = e.currentTarget as HTMLFormElement;
-		const model = form.model.value;
-		const provider = form.provider.value;
-		const apiUrl = form.apiUrl.value;
-		const apiKey = form.apiKey.value;
 
 		const { data, error } = await apiClient.admin.models.post({ model, provider, apiUrl, apiKey });
 		if (error) return toast.error((error.value as any).error);
@@ -32,12 +57,6 @@ const Models = () => {
 	const handleEditModel = async (e: React.FormEvent<HTMLFormElement>) => {
 		if (!showModal?.payload) return;
 		e.preventDefault();
-
-		const form = e.currentTarget as HTMLFormElement;
-		const model = form.model.value;
-		const provider = form.provider.value;
-		const apiUrl = form.apiUrl.value;
-		const apiKey = form.apiKey.value;
 
 		const { data, error } = await apiClient.admin.models.patch({ id: showModal.payload?.id, model, provider, apiUrl, apiKey });
 		if (error) return toast.error((error.value as any).error);
@@ -99,10 +118,44 @@ const Models = () => {
 					</DialogHeader>
 
 					<form className="space-y-3.5 flex-col flex-center-center" onSubmit={showModal?.mode === 'add' ? handleAddModel : handleEditModel}>
-						<Input type="text" name="model" placeholder="Model (e.g llama3.2)" defaultValue={showModal?.payload?.model} required={showModal?.mode === 'add'} />
-						<Input type="text" name="provider" placeholder="Provider (e.g ollama)" defaultValue={showModal?.payload?.provider} required={showModal?.mode === 'add'} />
-						<Input type="url" name="apiUrl" placeholder="ApiUrl (e.g http://localhost:11434/v1)" defaultValue={showModal?.payload?.apiUrl} required={showModal?.mode === 'add'} />
-						<Input type="password" name="apiKey" placeholder="ApiKey (************************)" required={showModal?.mode === 'add'} />
+						<div className="w-full space-y-2">
+							<Label htmlFor="preset">Preset</Label>
+							<Select defaultValue="custom" onValueChange={handlePresetChange}>
+								<SelectTrigger className="w-full">
+									<SelectValue id="preset" placeholder="Select a preset" />
+								</SelectTrigger>
+								<SelectContent>
+									{registeredPresets.map((preset) => (
+										<SelectItem value={preset.value}>{preset.label}</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="w-full space-y-2">
+							<Label htmlFor="model">Model</Label>
+							<Input type="text" id="model" name="model" value={model} onChange={(e) => setModel(e.target.value)} required={showModal?.mode === 'add'} />
+						</div>
+
+						<div className="w-full space-y-2">
+							<Label htmlFor="provider">Provider</Label>
+							<Input onChange={(e) => setProvider(e.target.value)} required={showModal?.mode === 'add'} value={provider} name="provider" id="provider" type="text" />
+						</div>
+
+						<div className="w-full space-y-2">
+							<Label htmlFor="apiUrl">ApiUrl</Label>
+							<Input onChange={(e) => setApiUrl(e.target.value)} required={showModal?.mode === 'add'} value={apiUrl} name="apiUrl" type="url" />
+						</div>
+
+						<div className="w-full space-y-2">
+							<Label htmlFor="apiKey">
+								ApiKey{' '}
+								<span title="This API key will be stored encrypted in the database">
+									<LockIcon className="size-3 text-primary" />
+								</span>
+							</Label>
+							<Input onChange={(e) => setApiKey(e.target.value)} required={showModal?.mode === 'add'} type="password" value={apiKey} name="apiKey" />
+						</div>
 
 						<Button type="submit" className="w-full mt-3">
 							Submit
