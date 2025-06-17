@@ -4,15 +4,15 @@ A self-hosted LLM Chat Web UI built with React and ElysiaJS.
 
 ## Features
 
-[x] Open Source & Self-Hosted
-[x] Chat Interface
-[x] Chat History
-[x] Multiple Model Support (OpenAI API Protocol Compatible)
-[x] Secure API Key Encryption
-[x] Multi-User Authentication
-[x] File Attachment Capabilities
-[x] Code Syntax Highlighting
-[x] Message Editing & Regeneration
+-   [x] Open Source & Self-Hosted
+-   [x] Chat Interface
+-   [x] Chat History
+-   [x] Multiple Model Support (OpenAI API Protocol Compatible)
+-   [x] Secure API Key Encryption
+-   [x] Multi-User Authentication
+-   [x] File Attachment Capabilities
+-   [x] Code Syntax Highlighting
+-   [x] Message Editing & Regeneration
 
 ---
 
