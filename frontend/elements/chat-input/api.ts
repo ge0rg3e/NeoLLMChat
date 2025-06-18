@@ -1,8 +1,8 @@
-import apiClient, { parseResponseStream } from '~frontend/lib/api';
 import type { Chat, Message } from '~frontend/lib/types';
 import { useNavigate, useParams } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
+import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
 import { v4 as uuid } from 'uuid';
 
@@ -70,14 +70,11 @@ const useChatApi = () => {
 			let assistantContent = '';
 			const assistantMessageId = uuid();
 
-			for await (const chunk of response.data as any) {
-				const chunkData = parseResponseStream(chunk);
-				if (!chunkData) continue;
-
-				assistantContent += chunkData.content;
+			for await (const chunk of response.data) {
+				assistantContent += chunk.content;
 				await db.chats.update(targetChatId, { messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-				if (chunkData.done) {
+				if (chunk.done) {
 					await db.activeRequests.delete(requestId);
 					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 					break;
@@ -156,14 +153,11 @@ const useChatApi = () => {
 				const assistantMessageId = uuid();
 
 				for await (const chunk of response.data as any) {
-					const chunkData = parseResponseStream(chunk);
-					if (!chunkData) continue;
-
-					assistantContent += chunkData.content;
+					assistantContent += chunk.content;
 
 					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-					if (chunkData.done) {
+					if (chunk.done) {
 						await db.activeRequests.delete(requestId);
 						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 						break;
@@ -227,15 +221,12 @@ const useChatApi = () => {
 				let assistantContent = '';
 				const assistantMessageId = uuid();
 
-				for await (const chunk of response.data as any) {
-					const chunkData = parseResponseStream(chunk);
-					if (!chunkData) continue;
-
-					assistantContent += chunkData.content;
+				for await (const chunk of response.data) {
+					assistantContent += chunk.content;
 
 					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-					if (chunkData.done) {
+					if (chunk.done) {
 						await db.activeRequests.delete(requestId);
 						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 						break;

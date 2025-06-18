@@ -29,19 +29,6 @@ export const saveMessages = async (chatId: string, messages: Message[], content:
 	}
 };
 
-export const closeStream = (stream: any, isStreamClosed: boolean) => {
-	if (isStreamClosed) return false;
-	isStreamClosed = true;
-	try {
-		stream.close();
-	} catch (error: any) {
-		if (error.name !== 'TypeError' || !error.message.includes('Controller is already closed')) {
-			console.error('Stream close error:', error.message);
-		}
-	}
-	return true;
-};
-
 export const getModel = async (id?: string) => {
 	const model = id ? await db.model.findUnique({ where: { id } }) : await db.model.findFirst();
 	if (!model) return null;
