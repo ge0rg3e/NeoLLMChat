@@ -9,9 +9,9 @@ const ChatMessages = () => {
 	const chat = chats?.find((chat) => chat.id === params.id);
 
 	return (
-		<div className="size-full max-h-[94vh] pt-5 pb-[160px] space-y-8 overflow-y-auto outline-none" id="chat-messages">
+		<div className="size-full max-h-[94vh] px-3 pt-5 pb-[160px] space-y-8 overflow-y-auto outline-none" id="chat-messages">
 			{chat ? (
-				chat.messages.map((data) => <Message key={data.id} data={data} />)
+				chat.messages.map((data, index) => <Message key={index} data={data} />)
 			) : (
 				<div className="size-full flex-center-center">
 					<p className="font-medium text-lg text-muted-foreground">Chat not found.</p>

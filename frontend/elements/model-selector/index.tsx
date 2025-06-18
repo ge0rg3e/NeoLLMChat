@@ -13,8 +13,8 @@ const ModelSelector = () => {
 				<SelectValue placeholder={models?.length === 0 ? 'No models yet' : 'Select a model'} />
 			</SelectTrigger>
 			<SelectContent>
-				{models?.map((model) => (
-					<SelectItem key={model.id} value={JSON.stringify(model)}>
+				{models?.map((model, index) => (
+					<SelectItem key={index} value={JSON.stringify(model)}>
 						{model.model}
 					</SelectItem>
 				))}

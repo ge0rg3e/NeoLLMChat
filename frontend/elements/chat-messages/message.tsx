@@ -9,6 +9,7 @@ import db from '~frontend/lib/dexie';
 import * as cheerio from 'cheerio';
 import { Marked } from 'marked';
 import hljs from 'highlight.js';
+import { Tooltip } from '~frontend/components/tooltip';
 
 type Props = {
 	data: _Message;
@@ -81,7 +82,7 @@ const Message = ({ data }: Props) => {
 	const activeRequest = activeRequests?.find((r) => r.chatId === chatId);
 
 	return (
-		<div className="w-full max-w-[755px] mx-auto space-y-2">
+		<div className="w-full max-w-[755px] mx-auto space-y-2 group">
 			{data.role === 'user' && isEditing ? (
 				<div className="bg-card rounded-xl py-2 px-3 w-fit">
 					<textarea className="w-full size-fit bg-transparent resize-none outline-none" value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
@@ -95,11 +96,11 @@ const Message = ({ data }: Props) => {
 			{/* Attachments  */}
 			{data.attachments.length !== 0 && (
 				<div className="flex-start-center gap-x-2 py-1">
-					{data.attachments.map((attachment, i) => {
+					{data.attachments.map((attachment, index) => {
 						const isImage = attachment.mimeType.startsWith('image/');
 
 						return (
-							<div key={i} className="flex-center-center overflow-hidden">
+							<div key={index} className="flex-center-center overflow-hidden">
 								{isImage && (
 									<img
 										src={`data:${attachment.mimeType};base64,${attachment.data}`}
@@ -116,38 +117,49 @@ const Message = ({ data }: Props) => {
 
 			{/* Options */}
 			{!activeRequest && (
-				<div className="flex-start-center gap-x-1 -mx-2">
+				<div className="flex-start-center gap-x-1 -mx-2 opacity-0 transition-smooth group-hover:opacity-100">
 					{isEditing && (
 						<Fragment>
-							<Button variant="ghost" size="icon" title="Save" onClick={handleEditSave}>
-								<CheckIcon />
-							</Button>
-							<Button variant="ghost" size="icon" title="Cancel" onClick={handleEditCancel}>
-								<XIcon />
-							</Button>
+							<Tooltip content="Save">
+								<Button variant="ghost" size="icon" onClick={handleEditSave}>
+									<CheckIcon />
+								</Button>
+							</Tooltip>
+
+							<Tooltip content="Cancel">
+								<Button variant="ghost" size="icon" title="Cancel" onClick={handleEditCancel}>
+									<XIcon />
+								</Button>
+							</Tooltip>
 						</Fragment>
 					)}
 
 					{data.role === 'assistant' && (
 						<Fragment>
-							<Button variant="ghost" size="icon" title="Regenerate" onClick={async () => await regenerateMessage(data.id)}>
-								<RefreshCcwIcon />
-							</Button>
+							<Tooltip content="Regenerate">
+								<Button variant="ghost" size="icon" onClick={async () => await regenerateMessage(data.id)}>
+									<RefreshCcwIcon />
+								</Button>
+							</Tooltip>
 						</Fragment>
 					)}
 
 					{data.role === 'user' && !isEditing && (
 						<Fragment>
-							<Button variant="ghost" size="icon" title="Edit" onClick={() => setIsEditing(true)}>
-								<PencilIcon />
-							</Button>
+							<Tooltip content="Edit">
+								<Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+									<PencilIcon />
+								</Button>
+							</Tooltip>
 						</Fragment>
 					)}
 
 					{!isEditing && (
-						<Button variant="ghost" size="icon" title="Copy" onClick={() => navigator.clipboard.writeText(data.content)}>
-							<CopyIcon />
-						</Button>
+						<Tooltip content="Copy">
+							<Button variant="ghost" size="icon" onClick={() => navigator.clipboard.writeText(data.content)}>
+								<CopyIcon />
+							</Button>
+						</Tooltip>
 					)}
 				</div>
 			)}

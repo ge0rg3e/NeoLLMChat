@@ -74,7 +74,7 @@ const Settings = () => {
 				<div className="h-[400px] flex flex-row gap-x-3">
 					{/* Tabs */}
 					<div className="size-full max-w-[180px] space-y-1.5">
-						{tabs.map((tab) => {
+						{tabs.map((tab, index) => {
 							if (tab.id === 'admin' && session?.role !== 'admin') return null;
 
 							return (
@@ -84,7 +84,7 @@ const Settings = () => {
 										settingsTab === tab.id && 'bg-accent'
 									)}
 									onClick={() => handleChangeTab(tab.id)}
-									key={tab.id}
+									key={index}
 								>
 									{tab.icon && <tab.icon className="size-4.5" />}
 									{tab.label}

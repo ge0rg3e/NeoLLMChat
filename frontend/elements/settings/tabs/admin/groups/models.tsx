@@ -114,8 +114,8 @@ const Models = () => {
 					</Dialog>
 				</div>
 
-				{models?.map((model) => (
-					<div key={model.id} className="w-full h-14 bg-accent flex-between-center gap-x-2 text-sm px-3 rounded-lg">
+				{models?.map((model, index) => (
+					<div key={index} className="w-full h-14 bg-accent flex-between-center gap-x-2 text-sm px-3 rounded-lg">
 						<div className="flex flex-col items-start">
 							<div>{model.model}</div>
 							<div className="text-muted-foreground">{model.provider}</div>

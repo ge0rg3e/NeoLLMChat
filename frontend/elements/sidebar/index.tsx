@@ -1,17 +1,20 @@
+import { PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { Tooltip } from '~frontend/components/tooltip';
+import { Button } from '~frontend/components/button';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
-import { twMerge } from '~frontend/lib/utils';
-import { Trash2Icon } from 'lucide-react';
+import { twMerge, useScreen } from '~frontend/lib/utils';
 import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
 import { toast } from 'sonner';
 
 const SideBar = () => {
-	const { session } = useApp();
+	const { size } = useScreen();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const chats = useLiveQuery(() => db.chats.toArray());
+	const { session, appearance, setAppearance } = useApp();
 
 	const handleDeleteChat = async (chatId: string) => {
 		await db.chats.delete(chatId);
@@ -24,28 +27,40 @@ const SideBar = () => {
 	};
 
 	return (
-		<aside className="w-full max-w-[270px] h-screen p-3 bg-background flex-col flex-between-center">
+		<aside
+			className={twMerge(
+				'w-full max-w-[270px] h-screen p-3 bg-background flex-col flex-between-center z-[999] transition-smooth',
+				appearance.sidebarClosed && `fixed top-0 ${appearance.sidebarSide === 'left' ? '!-left-full' : '!-right-full'}`,
+				size.width < 1100 && 'fixed top-0 left-0'
+			)}
+		>
 			{/* Top */}
 			<div className="w-full space-y-5">
-				{/* New Chat */}
-				<Link to="/" className="w-full h-9 px-3.5 flex-center-center rounded-lg bg-primary text-primary-foreground transition-smooth hover:bg-primary/90">
-					<span className="font-medium text-base">New Chat</span>
-				</Link>
+				{/* Header */}
+				<div className="flex-between-center">
+					<div className='bg-[url("/images/logo.png")] bg-center bg-contain bg-no-repeat size-8' />
+
+					<Tooltip content="New Chat" side={appearance.sidebarSide === 'left' ? 'right' : 'left'}>
+						<Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+							<PlusIcon />
+						</Button>
+					</Tooltip>
+				</div>
 
 				{/* Chats */}
 				<div className="space-y-0.5">
-					{chats?.map((chat) => (
+					{chats?.map((chat, index) => (
 						<Link
 							className={twMerge('relative group w-full h-9 px-3.5 flex-start-center rounded-lg transition-smooth hover:bg-accent', location.pathname === `/c/${chat.id}` && 'bg-accent')}
 							to={`/c/${chat.id}`}
-							key={chat.id}
+							key={index}
 						>
 							{/* Title */}
 							<span className="text-sm text-foreground">{chat.title}</span>
 
 							{/* Actions */}
 							<div className="absolute flex-center-center right-3.5 transition-smooth opacity-0 group-hover:opacity-100">
-								<button className="flex-center-center cursor-pointer transition-smooth hover:text-destructive" title="Delete" onClick={() => handleDeleteChat(chat.id)}>
+								<button className="flex-center-center cursor-pointer transition-smooth hover:text-destructive" title="Delete Chat" onClick={() => handleDeleteChat(chat.id)}>
 									<Trash2Icon className="size-4" />
 								</button>
 							</div>
@@ -58,18 +73,27 @@ const SideBar = () => {
 
 			{/* Bottom */}
 			<div className="w-full">
-				{/* Account */}
-				{session && (
-					<Link className="w-full h-9 px-3.5 flex-start-center gap-x-2 rounded-lg transition-smooth hover:bg-accent" to="?settings=general">
-						{/* Avatar */}
-						<div className="size-7 flex-center-center bg-accent rounded-full select-none">
-							<span className="text-muted-foreground">{session?.username[0]}</span>
-						</div>
+				<div className="flex-between-center">
+					{/* Account */}
+					{session && (
+						<Link className="w-full h-9 px-3.5 flex-start-center gap-x-2 rounded-lg transition-smooth hover:bg-accent" to="?settings=general">
+							{/* Avatar */}
+							<div className="size-7 flex-center-center bg-accent rounded-full select-none">
+								<span className="text-muted-foreground">{session?.username[0]}</span>
+							</div>
 
-						{/* Info */}
-						<div className="text-sm">{session?.username}</div>
-					</Link>
-				)}
+							{/* Info */}
+							<div className="text-sm">{session?.username}</div>
+						</Link>
+					)}
+
+					{/* Close Sidebar */}
+					<Tooltip content="Close" side={appearance.sidebarSide === 'left' ? 'right' : 'left'}>
+						<Button variant="ghost" size="sm" onClick={() => setAppearance({ sidebarClosed: true })}>
+							{appearance.sidebarSide === 'left' ? <PanelLeftCloseIcon /> : <PanelLeftOpenIcon />}
+						</Button>
+					</Tooltip>
+				</div>
 			</div>
 		</aside>
 	);

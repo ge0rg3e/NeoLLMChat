@@ -48,6 +48,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 	const [selectedModel, setSelectedModel] = useState<Model>({} as any);
 	const [session, setSession] = useState<Session>(undefined);
 	const [appearance, _setAppearance] = useState<Appearance>({
+		sidebarClosed: false,
 		sidebarSide: 'left',
 		theme: 'dark'
 	});

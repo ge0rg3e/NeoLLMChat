@@ -1,18 +1,19 @@
 import { AttachmentsPreview, AttachmentsTrigger } from './attachments';
 import { SendHorizontalIcon, SquareIcon } from 'lucide-react';
+import { twMerge, useScreen } from '~frontend/lib/utils';
 import { Button } from '~frontend/components/button';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
 import ModelSelector from '../model-selector';
-import { twMerge } from '~frontend/lib/utils';
 import { useLocation } from 'react-router';
 import db from '~frontend/lib/dexie';
 import { useMemo } from 'react';
 import useChatApi from './api';
 
 const ChatInput = () => {
+	const { size } = useScreen();
 	const { pathname } = useLocation();
-	const { chatInput, setChatInput, appearance } = useApp();
+	const { chatInput, setChatInput } = useApp();
 	const { chatId, sendMessage, stopRequest } = useChatApi();
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
@@ -26,13 +27,7 @@ const ChatInput = () => {
 	}, [chatId, chatInput, activeRequests]);
 
 	return (
-		<div
-			className={twMerge(
-				'w-full flex items-center justify-center',
-				pathname.includes('/c') && 'fixed bottom-5 max-w-[calc(100vw-270px)]',
-				appearance.sidebarSide === 'left' ? 'right-0' : 'left-0'
-			)}
-		>
+		<div className={twMerge('w-full flex items-center justify-center', pathname.includes('/c') && 'fixed bottom-5 max-w-[calc(100vw-270px)]', size.width < 1100 && 'max-w-full px-5')}>
 			<div className="w-full max-w-[765px] max-h-[200px] p-2 rounded-3xl bg-accent/50 backdrop-blur-xl">
 				<div className="flex flex-col w-full h-full rounded-2xl bg-accent/70">
 					<AttachmentsPreview />

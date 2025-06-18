@@ -62,14 +62,14 @@ export const AttachmentsPreview = () => {
 
 	return (
 		<div className="flex-start-center gap-x-2 pt-3 px-2">
-			{chatInput.attachments.map((attachment, i) => {
+			{chatInput.attachments.map((attachment, index) => {
 				const isImage = attachment.mimeType.startsWith('image/');
 
 				return (
-					<div key={i} className="flex-center-center relative overflow-hidden group">
+					<div key={index} className="flex-center-center relative overflow-hidden group">
 						<button
 							className="absolute opacity-0 group-hover:opacity-100 size-full flex-center-center transition-smooth bg-background/50 cursor-pointer backdrop-blur-[2px] text-destructive"
-							onClick={() => handleRemove(i)}
+							onClick={() => handleRemove(index)}
 							title={`Remove ${attachment.fileName}`}
 						>
 							<XIcon className="size-4" />

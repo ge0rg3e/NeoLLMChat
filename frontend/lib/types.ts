@@ -1,6 +1,7 @@
 export type Appearance = {
 	theme: 'dark' | 'light';
 	sidebarSide: 'left' | 'right';
+	sidebarClosed: boolean;
 };
 
 export type ActiveRequest = {
