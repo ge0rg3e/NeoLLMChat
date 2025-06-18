@@ -1,6 +1,7 @@
 import { getModel, getOrCreateChat, saveMessages, SYSTEM_PROMPT } from './helpers';
-import type { Chat } from '~frontend/lib/types';
+import type { Chat, Message } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
+import { messages } from './schema';
 import Elysia, { t } from 'elysia';
 import db from '../database';
 import OpenAI from 'openai';
@@ -31,8 +32,6 @@ const chatService = new Elysia({ prefix: '/api' })
 				const model = await getModel(body.modelId);
 				if (!model) throw new Error('Model not found');
 
-				const provider = new OpenAI({ baseURL: model.apiUrl, apiKey: model.decryptedApiKey });
-
 				const formattedMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = body.messages.map((message) => ({
 					id: message.id,
 					role: message.role as any,
@@ -47,7 +46,7 @@ const chatService = new Elysia({ prefix: '/api' })
 					]
 				}));
 
-				const aiResponse = await provider.chat.completions.create(
+				const aiResponse = await model.instance.chat.completions.create(
 					{
 						messages: [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }] }, ...formattedMessages],
 						model: model.model,
@@ -90,25 +89,66 @@ const chatService = new Elysia({ prefix: '/api' })
 				chatId: t.String(),
 				requestId: t.String(),
 				modelId: t.String(),
-				messages: t.Array(
-					t.Object({
-						id: t.String(),
-						role: t.Union([t.Literal('user'), t.Literal('assistant')]),
-						content: t.String(),
-						attachments: t.Array(
-							t.Object({
-								fileName: t.String(),
-								mimeType: t.String(),
-								data: t.String()
-							})
-						)
-					})
-				)
+				messages: messages
 			})
 		}
 	)
+	.post(
+		'/chat/generateTitle',
+		async ({ body, set }) => {
+			const chat = await db.chat.findUnique({ where: { id: body.chatId }, select: { title: true } });
+			if (!chat) {
+				set.status = 404;
+				return { data: null, error: 'Chat not found' };
+			}
 
-	// other routes (unchanged)
+			if (chat.title !== 'New chat') {
+				set.status = 400;
+				return { data: null, error: 'Chat has a title' };
+			}
+
+			const model = await getModel();
+			if (!model) {
+				set.status = 400;
+				return { data: null, error: 'Model not available' };
+			}
+
+			const response = await model.instance.chat.completions.create({
+				messages: [
+					{ role: 'user', content: 'Generate a short title for this conversation. Make sure to return only the title.' },
+					...body.messages.map((message) => ({
+						role: message.role,
+						content: message.content
+					}))
+				],
+				model: model.model,
+				stream: false
+			});
+
+			const title = response.choices[0]?.message?.content;
+			if (!title) {
+				set.status = 500;
+				return { data: null, error: 'Failed to generate title' };
+			}
+
+			await db.chat.update({
+				where: {
+					id: body.chatId
+				},
+				data: {
+					title
+				}
+			});
+
+			return { data: { title }, error: null };
+		},
+		{
+			body: t.Object({
+				chatId: t.String(),
+				messages: messages
+			})
+		}
+	)
 	.delete(
 		'/chat',
 		async ({ body, user, set }) => {

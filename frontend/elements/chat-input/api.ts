@@ -9,16 +9,15 @@ import { v4 as uuid } from 'uuid';
 const useChatApi = () => {
 	const navigate = useNavigate();
 	const { id: chatId } = useParams();
-	const { abortControllers, setAbortControllers, selectedModel, chatInput, setChatInput, session } = useApp();
-
 	const chats = useLiveQuery(() => db.chats.toArray());
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
+	const { abortControllers, setAbortControllers, selectedModel, chatInput, setChatInput, session } = useApp();
 
 	const createNewChat = async () => {
 		const newChatId = uuid();
 		await db.chats.add({
 			id: newChatId,
-			title: 'New Chat',
+			title: 'New chat',
 			messages: [],
 			createdBy: session!.id!,
 			createdAt: new Date()
@@ -77,6 +76,10 @@ const useChatApi = () => {
 				if (chunk.done) {
 					await db.activeRequests.delete(requestId);
 					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
+
+					if (chat.title === 'New chat' || chat.title === undefined) {
+						await generateTitle(targetChatId, updatedMessages.slice(0, 2));
+					}
 					break;
 				}
 			}
@@ -240,6 +243,13 @@ const useChatApi = () => {
 		} catch (err) {
 			console.error('>> NeoLLMChat - Failed to edit message.', err);
 		}
+	};
+
+	const generateTitle = async (chatId: string, messages: Message[]) => {
+		const { data } = await apiClient.chat.generateTitle.post({ chatId, messages });
+		if (!data) return;
+
+		await db.chats.update(chatId, { title: data.data?.title });
 	};
 
 	return {

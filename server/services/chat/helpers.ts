@@ -2,6 +2,7 @@ import { decryptContent } from '../content-encryption';
 import type { Message } from '~frontend/lib/types';
 import { v4 as uuid } from 'uuid';
 import db from '../database';
+import OpenAI from 'openai';
 
 export const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
 
@@ -34,5 +35,7 @@ export const getModel = async (id?: string) => {
 	if (!model) return null;
 
 	const decryptedApiKey = (await decryptContent(model.apiKey)) as string;
-	return { id: model.id, model: model.model, provider: model.provider, apiUrl: model.apiUrl, decryptedApiKey };
+	const instance = new OpenAI({ baseURL: model.apiUrl, apiKey: decryptedApiKey });
+
+	return { id: model.id, model: model.model, provider: model.provider, apiUrl: model.apiUrl, decryptedApiKey, instance };
 };
