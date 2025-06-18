@@ -4,7 +4,7 @@ import jwt from '@elysiajs/jwt';
 import db from '../database';
 
 // Config
-const ACCESS_TOKEN_EXP = 5 * 60; // 5 mins
+const ACCESS_TOKEN_EXP = 30 * 60; // 30 mins
 const REFRESH_TOKEN_EXP = 7 * 86400; // 7 days
 
 const getExpTimestamp = (seconds: number) => {
