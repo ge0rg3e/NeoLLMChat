@@ -42,7 +42,7 @@ const SideBar = () => {
 	return (
 		<aside
 			className={twMerge(
-				'w-full max-w-[270px] h-screen p-3 bg-background flex-col flex-between-center z-[999] transition-smooth',
+				'w-full max-w-[270px] h-screen p-3 bg-background flex-col flex-between-center z-30 transition-smooth',
 				appearance.sidebarClosed && `fixed top-0 ${appearance.sidebarSide === 'left' ? '!-left-full' : '!-right-full'}`,
 				size.width < 1100 && 'fixed top-0 left-0'
 			)}
