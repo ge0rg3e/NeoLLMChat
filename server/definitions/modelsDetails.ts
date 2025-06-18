@@ -822,6 +822,14 @@ export const modelsDetails = [
 		multimodal: false,
 		maxContextLength: 8192,
 		specialFeatures: ['lightweight', 'open-source']
+	},
+	{
+		model: 'llama3.2',
+		haveThinkingMode: false,
+		supportAttachments: false,
+		multimodal: false,
+		maxContextLength: 8192,
+		specialFeatures: ['lightweight', 'open-source']
 	}
 ];
 

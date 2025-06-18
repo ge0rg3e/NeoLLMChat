@@ -10,10 +10,9 @@ export type ActiveRequest = {
 };
 
 export type Model = {
-	model: string;
 	id: string;
+	model: string;
 	provider: string;
-	apiUrl: string;
 	details: {
 		haveThinkingMode: boolean;
 		supportAttachments: boolean;

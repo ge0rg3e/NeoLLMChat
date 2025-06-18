@@ -6,6 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
 import db from '~frontend/lib/dexie';
 import { useState } from 'react';
+import { truncateString } from '~frontend/lib/utils';
 
 const ModelSelector = () => {
 	const [open, setOpen] = useState(false);
@@ -30,7 +31,9 @@ const ModelSelector = () => {
 							setOpen(false);
 						}}
 					>
-						<div className="text-sm">{model.model}</div>
+						<div className="text-sm" title={model.model}>
+							{truncateString(model.model, 26)}
+						</div>
 
 						<div className="flex-end-center gap-x-2">
 							{model.details?.haveThinkingMode && (

@@ -16,6 +16,7 @@ const Models = () => {
 	const [apiUrl, setApiUrl] = useState('');
 	const [apiKey, setApiKey] = useState('');
 	const [provider, setProvider] = useState('');
+	const [dialogOpen, setDialogOpen] = useState(false);
 	const models = useLiveQuery(() => db.models.toArray());
 
 	const handlePresetChange = (value: string) => {
@@ -35,6 +36,7 @@ const Models = () => {
 		if (error) return toast.error((error.value as any).error);
 
 		await db.models.put(data.data!);
+		setDialogOpen(false);
 		toast.success('You have successfully added a new model.');
 	};
 
@@ -55,7 +57,7 @@ const Models = () => {
 				<div className="flex-between-center">
 					<h2 className="font-medium">Models</h2>
 
-					<Dialog>
+					<Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
 						<DialogTrigger asChild>
 							<Button variant="ghost" size="icon" title="Add Model">
 								<PlusIcon className="size-4" />

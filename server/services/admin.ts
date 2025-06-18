@@ -2,6 +2,7 @@ import { encryptContent } from './content-encryption';
 import authPlugin from './auth/plugin';
 import Elysia, { t } from 'elysia';
 import db from './database';
+import { getModelDetails } from '~server/definitions/modelsDetails';
 
 const adminService = new Elysia({ prefix: '/api/admin' })
 	.use(authPlugin)
@@ -22,10 +23,20 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 					apiUrl: body.apiUrl,
 					apiKey: ecryptedApiKey,
 					createdBy: user.id
+				},
+				select: {
+					id: true,
+					model: true,
+					provider: true
 				}
 			});
 
-			return { data: newModel };
+			return {
+				data: {
+					...newModel,
+					details: getModelDetails(newModel.model)
+				}
+			};
 		},
 		{
 			body: t.Object({
