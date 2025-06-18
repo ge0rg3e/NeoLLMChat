@@ -9,7 +9,7 @@ import { Elysia } from 'elysia';
 const app = new Elysia()
 	.use(
 		cors({
-			origin: 'http://localhost:8607',
+			origin: Bun.env.NODE_ENV === 'production' ? undefined : 'http://localhost:8607',
 			methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 			credentials: true
 		})
