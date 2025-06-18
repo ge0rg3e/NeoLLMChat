@@ -7,19 +7,11 @@ const treatyClient = treaty<App>(window.location.origin.endsWith(':8607') ? 'htt
 	}
 });
 
-const debug = localStorage.getItem('DEBUG') === 'true';
-
 export const parseChatChunk = (input: string) => {
-	if (debug) console.info('>> [DEBUG] NeoLLMChat - Input', input);
-
 	const cleanString = input.trim().replace(/^data:\s?/, '');
-
-	if (debug) console.info('>> [DEBUG] NeoLLMChat - Clean string', cleanString);
 
 	try {
 		const parsedData = JSON.parse(cleanString);
-
-		if (debug) console.info('>> [DEBUG] NeoLLMChat - Parsed Data', parsedData);
 
 		return {
 			id: parsedData.id,
@@ -32,8 +24,7 @@ export const parseChatChunk = (input: string) => {
 			content: string;
 			done: boolean;
 		};
-	} catch (err) {
-		if (debug) console.info('>> [DEBUG] NeoLLMChat - Parsed Data Error', err);
+	} catch {
 		return null;
 	}
 };

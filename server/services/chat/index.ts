@@ -10,14 +10,7 @@ const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
 	.post(
 		'/chat',
-		async function* ({ body, request, user, set }) {
-			set.headers = {
-				...(set.headers as any),
-				'x-accel-buffering': 'no',
-				'content-type': 'text/event-stream',
-				'cache-control': 'no-cache'
-			};
-
+		async function* ({ body, request, user }) {
 			const abortController = new AbortController();
 			const abortSignal = request.signal;
 			let isStreamClosed = false;
