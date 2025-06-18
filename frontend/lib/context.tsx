@@ -60,6 +60,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const changeModel = (model: Model) => {
+		if (!model) return;
+
 		localStorage.setItem('selectedModel', model.id);
 		setSelectedModel(model);
 	};
