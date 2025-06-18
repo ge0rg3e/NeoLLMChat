@@ -1,6 +1,7 @@
 import { CheckIcon, CopyIcon, PencilIcon, RefreshCcwIcon, XIcon } from 'lucide-react';
 import type { Message as _Message } from '~frontend/lib/types';
 import { Fragment, useEffect, useState } from 'react';
+import { Tooltip } from '~frontend/components/tooltip';
 import { Button } from '~frontend/components/button';
 import { markedHighlight } from 'marked-highlight';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -9,7 +10,6 @@ import db from '~frontend/lib/dexie';
 import * as cheerio from 'cheerio';
 import { Marked } from 'marked';
 import hljs from 'highlight.js';
-import { Tooltip } from '~frontend/components/tooltip';
 
 type Props = {
 	data: _Message;
@@ -55,6 +55,34 @@ const Message = ({ data }: Props) => {
 		$('ul').addClass('list-disc pl-5');
 		$('li').addClass('mb-2');
 
+		$('pre').addClass('bg-card overflow-auto text-sm text-white my-2 rounded-xl p-4 break-words');
+
+		$('pre').each((_, el) => {
+			const $el = $(el);
+			const codeHtml = $.html($el);
+			const codeTag = $el.find('code');
+			const langClass = codeTag.attr('class') || '';
+			const langMatch = langClass.match(/language-(\w+)/);
+			const lang = langMatch ? langMatch[1] : 'plaintext';
+
+			const wrapper = `
+			<div class="relative group my-4 overflow-hidden">
+				<div class="absolute w-full h-8 px-3 bg-accent flex-between-center rounded-t-xl">
+					<span class="text-xs text-muted-foreground">${lang}</span>
+					
+					<button class="cursor-pointer hover:text-primary" title="Copy" onclick="codeBlockCopy(this)">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+					</button>
+				</div>	
+
+				<div class="pt-4">
+				${codeHtml}
+				</div>
+			</div>
+			`;
+			$el.replaceWith(wrapper);
+		});
+
 		setFormattedContent($.html());
 
 		scrollToLastMessage();
@@ -63,6 +91,17 @@ const Message = ({ data }: Props) => {
 	useEffect(() => {
 		formatContent();
 	}, [data]);
+
+	useEffect(() => {
+		// @ts-ignore Define the copy function globally once
+		window.codeBlockCopy = (btn: HTMLElement) => {
+			const code = btn.parentElement?.parentElement?.querySelector('pre code');
+			if (!code) return;
+
+			const text = code.textContent || '';
+			navigator.clipboard.writeText(text);
+		};
+	}, []);
 
 	const handleEditSave = async () => {
 		if (editedContent.trim() === data.content) {

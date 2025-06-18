@@ -11,7 +11,7 @@ import Home from './pages/home';
 // @ts-ignore App Style
 import './globals.css';
 // @ts-ignore Highlight.js Style
-import 'highlight.js/styles/github.css';
+import 'highlight.js/styles/agate.css';
 
 const router = createBrowserRouter([
 	{
