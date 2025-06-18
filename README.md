@@ -18,7 +18,7 @@ A self-hosted LLM Chat Web UI built with React and ElysiaJS.
 
 ## Coming Soon
 
--   [] Web Search
+-   [ ] Web Search
 
 ## Setup Guide
 
