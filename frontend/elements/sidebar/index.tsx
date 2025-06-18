@@ -1,5 +1,5 @@
 import { PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react';
-import { twMerge, useScreen, formatDateGroup } from '~frontend/lib/utils';
+import { twMerge, useScreen, formatDateGroup, truncateString } from '~frontend/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Tooltip } from '~frontend/components/tooltip';
 import { Button } from '~frontend/components/button';
@@ -67,9 +67,9 @@ const SideBar = () => {
 				</div>
 
 				{/* Chats */}
-				<div className="space-y-0.5">
+				<div className="space-y-2">
 					{Object.entries(groupedChats || {}).map(([dateGroup, chatsInGroup]) => (
-						<div key={dateGroup}>
+						<div key={dateGroup} className="space-y-1.5">
 							<div className="text-xs text-primary px-1.5 py-2">{dateGroup}</div>
 							{chatsInGroup?.map((chat, index) => (
 								<Link
@@ -81,7 +81,9 @@ const SideBar = () => {
 									key={index}
 								>
 									{/* Title */}
-									<span className="text-sm text-foreground">{chat.title}</span>
+									<span className="text-sm text-foreground" title={chat.title}>
+										{truncateString(chat.title, 28)}
+									</span>
 
 									{/* Actions */}
 									<div className="absolute flex-center-center right-3.5 transition-smooth opacity-0 group-hover:opacity-100">

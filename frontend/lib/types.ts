@@ -14,6 +14,17 @@ export type Model = {
 	id: string;
 	provider: string;
 	apiUrl: string;
+	details: {
+		haveThinkingMode: boolean;
+		supportAttachments: boolean;
+		multimodal: boolean;
+		maxContextLength: number;
+		specialFeatures: string[];
+	} | null;
+};
+
+export type ModelParams = {
+	thinkingMode: boolean;
 };
 
 export type Attachment = {

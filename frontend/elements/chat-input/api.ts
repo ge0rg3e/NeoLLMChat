@@ -11,7 +11,7 @@ const useChatApi = () => {
 	const { id: chatId } = useParams();
 	const chats = useLiveQuery(() => db.chats.toArray());
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
-	const { abortControllers, setAbortControllers, selectedModel, chatInput, setChatInput, session } = useApp();
+	const { abortControllers, setAbortControllers, selectedModel, selectedModelParams, chatInput, setChatInput, session } = useApp();
 
 	const createNewChat = async () => {
 		const newChatId = uuid();
@@ -62,7 +62,10 @@ const useChatApi = () => {
 		setAbortControllers((prev) => [...prev, { requestId, controller: abortController }]);
 
 		try {
-			const response = await apiClient.chat.post({ chatId: targetChatId, requestId, modelId: selectedModel.id, messages: updatedMessages }, { fetch: { signal: abortController.signal } });
+			const response = await apiClient.chat.post(
+				{ chatId: targetChatId, requestId, model: { id: selectedModel.id, params: selectedModelParams }, messages: updatedMessages },
+				{ fetch: { signal: abortController.signal } }
+			);
 			if (!response.data) return;
 
 			// Process streaming response
@@ -142,7 +145,7 @@ const useChatApi = () => {
 					{
 						chatId,
 						requestId,
-						modelId: selectedModel.id,
+						model: { id: selectedModel.id, params: selectedModelParams },
 						messages: messagesToKeep
 					},
 					{ fetch: { signal: abortController.signal } }
@@ -214,7 +217,7 @@ const useChatApi = () => {
 					{
 						chatId,
 						requestId,
-						modelId: selectedModel.id,
+						model: { id: selectedModel.id, params: selectedModelParams },
 						messages: messagesToKeep
 					},
 					{ fetch: { signal: abortController.signal } }

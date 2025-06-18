@@ -4,9 +4,10 @@ import { twMerge, useScreen } from '~frontend/lib/utils';
 import { Button } from '~frontend/components/button';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
-import ModelSelector from '../model-selector';
+import ModelSelector from './model-selector';
 import { useLocation } from 'react-router';
 import db from '~frontend/lib/dexie';
+import Thinking from './thinking';
 import { useMemo } from 'react';
 import useChatApi from './api';
 
@@ -47,6 +48,7 @@ const ChatInput = () => {
 						<div className="flex-start-center gap-x-2">
 							<AttachmentsTrigger />
 							<ModelSelector />
+							<Thinking />
 						</div>
 
 						<Button size="icon" disabled={buttonState.disabled} title={buttonState.label} onClick={handleSend}>

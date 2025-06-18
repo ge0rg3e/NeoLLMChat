@@ -1,4 +1,4 @@
-import { getModel, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
+import { getModel, getModelThinkinParams, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
 import type { Chat } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
 import { messages } from './schema';
@@ -29,7 +29,7 @@ const chatService = new Elysia({ prefix: '/api' })
 			try {
 				await getOrCreateChat(body.chatId, user.id);
 
-				const model = await getModel(body.modelId);
+				const model = await getModel(body.model.id);
 				if (!model) throw new Error('Model not found');
 
 				const formattedMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = body.messages.map((message) => ({
@@ -46,15 +46,24 @@ const chatService = new Elysia({ prefix: '/api' })
 					]
 				}));
 
+				let params: any = {};
+
+				if (body.model.params.thinkingMode === true) {
+					params = { ...params, ...getModelThinkinParams(model.provider) };
+				}
+
 				const aiResponse = await model.instance.chat.completions.create(
 					{
 						messages: [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }] }, ...formattedMessages],
 						model: model.model,
-						stream: true
+						stream: true,
+						// @ts-ignore
+						...params
 					},
 					{ signal: abortController.signal }
 				);
 
+				// @ts-ignore
 				for await (const chunk of aiResponse) {
 					if (abortSignal.aborted || isStreamClosed) break;
 
@@ -89,7 +98,12 @@ const chatService = new Elysia({ prefix: '/api' })
 			body: t.Object({
 				chatId: t.String(),
 				requestId: t.String(),
-				modelId: t.String(),
+				model: t.Object({
+					id: t.String(),
+					params: t.Object({
+						thinkingMode: t.Boolean()
+					})
+				}),
 				messages: messages
 			})
 		}
@@ -116,7 +130,11 @@ const chatService = new Elysia({ prefix: '/api' })
 
 			const response = await model.instance.chat.completions.create({
 				messages: [
-					{ role: 'user', content: 'Generate a short title for this conversation. Make sure to return only the title.' },
+					{
+						role: 'user',
+						content:
+							'Generate a concise, descriptive title (max 6 words) that captures the main topic of this conversation. Respond with only the title, no additional text or punctuation.'
+					},
 					...body.messages.map((message) => ({
 						role: message.role,
 						content: message.content

@@ -1,4 +1,4 @@
-import type { _AbortController, Appearance, Chat, ChatInput, Model, Session } from './types';
+import type { _AbortController, Appearance, Chat, ChatInput, Model, ModelParams, Session } from './types';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import apiClient from './api';
 import db from './dexie';
@@ -14,6 +14,9 @@ interface ContextData {
 
 	selectedModel: Model;
 	changeModel: (model: Model) => void;
+
+	selectedModelParams: ModelParams;
+	setSelectedModelParams: SetState<ModelParams>;
 
 	session: Session;
 	setSession: SetState<Session>;
@@ -52,6 +55,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		sidebarSide: 'left',
 		theme: 'dark'
 	});
+	const [selectedModelParams, setSelectedModelParams] = useState<ModelParams>({ thinkingMode: false });
 
 	const setAppearance = (params: Partial<Appearance>) => {
 		const newAppearance = { ...appearance, ...params };
@@ -64,6 +68,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
 		localStorage.setItem('selectedModel', model.id);
 		setSelectedModel(model);
+		setSelectedModelParams({ thinkingMode: false });
 	};
 
 	const onLoad = async () => {
@@ -131,6 +136,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 				setChatInput,
 				selectedModel,
 				changeModel,
+				selectedModelParams,
+				setSelectedModelParams,
 				session,
 				setSession,
 				appearance,

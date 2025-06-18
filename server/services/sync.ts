@@ -1,3 +1,4 @@
+import { getModelDetails } from '~server/definitions/modelsDetails';
 import authPlugin from './auth/plugin';
 import { Elysia } from 'elysia';
 import db from './database';
@@ -8,7 +9,10 @@ const syncService = new Elysia({ prefix: '/api' }).use(authPlugin).get('/sync', 
 
 	return {
 		chats,
-		models
+		models: models.map((e) => ({
+			...e,
+			details: getModelDetails(e.model)
+		}))
 	};
 });
 

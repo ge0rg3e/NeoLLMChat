@@ -28,6 +28,13 @@ export const useScreen = () => {
 	};
 };
 
+export const truncateString = (str: string, maxLength: number): string => {
+	if (str.length <= maxLength) {
+		return str;
+	}
+	return str.slice(0, maxLength) + '...';
+};
+
 export const formatDateGroup = (date: Date): string => {
 	const now = new Date();
 	const diffTime = now.getTime() - date.getTime();
