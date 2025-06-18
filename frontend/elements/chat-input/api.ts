@@ -1,8 +1,8 @@
+import apiClient, { parseChatChunk } from '~frontend/lib/api';
 import type { Chat, Message } from '~frontend/lib/types';
 import { useNavigate, useParams } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
-import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
 import { v4 as uuid } from 'uuid';
 
@@ -70,10 +70,13 @@ const useChatApi = () => {
 			const assistantMessageId = uuid();
 
 			for await (const chunk of response.data) {
-				assistantContent += chunk.content;
+				const data = parseChatChunk(chunk);
+				if (!data) continue;
+
+				assistantContent += data.content;
 				await db.chats.update(targetChatId, { messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-				if (chunk.done) {
+				if (data.done) {
 					await db.activeRequests.delete(requestId);
 					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 
@@ -155,12 +158,15 @@ const useChatApi = () => {
 				let assistantContent = '';
 				const assistantMessageId = uuid();
 
-				for await (const chunk of response.data as any) {
-					assistantContent += chunk.content;
+				for await (const chunk of response.data) {
+					const data = parseChatChunk(chunk);
+					if (!data) continue;
+
+					assistantContent += data.content;
 
 					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-					if (chunk.done) {
+					if (data.done) {
 						await db.activeRequests.delete(requestId);
 						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 						break;
@@ -225,11 +231,14 @@ const useChatApi = () => {
 				const assistantMessageId = uuid();
 
 				for await (const chunk of response.data) {
-					assistantContent += chunk.content;
+					const data = parseChatChunk(chunk);
+					if (!data) continue;
+
+					assistantContent += data.content;
 
 					await db.chats.update(chatId, { messages: [...messagesToKeep, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
-					if (chunk.done) {
+					if (data.done) {
 						await db.activeRequests.delete(requestId);
 						setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 						break;

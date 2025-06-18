@@ -11,6 +11,7 @@ export default defineConfig({
 			'~server': path.resolve(__dirname, './server')
 		}
 	},
+
 	root: './frontend',
 	server: {
 		port: 8607

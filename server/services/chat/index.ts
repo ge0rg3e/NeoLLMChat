@@ -1,5 +1,5 @@
-import { getModel, getOrCreateChat, saveMessages, SYSTEM_PROMPT } from './helpers';
-import type { Chat, Message } from '~frontend/lib/types';
+import { getModel, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
+import type { Chat } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
 import { messages } from './schema';
 import Elysia, { t } from 'elysia';
@@ -10,7 +10,14 @@ const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
 	.post(
 		'/chat',
-		async function* ({ body, request, user }) {
+		async function* ({ body, request, user, set }) {
+			set.headers = {
+				...(set.headers as any),
+				'x-accel-buffering': 'no',
+				'content-type': 'text/event-stream',
+				'cache-control': 'no-cache'
+			};
+
 			const abortController = new AbortController();
 			const abortSignal = request.signal;
 			let isStreamClosed = false;
@@ -63,12 +70,13 @@ const chatService = new Elysia({ prefix: '/api' })
 
 					if (content) aiResponseChunks.push(content);
 
-					yield {
+					// Temporary fix - https://github.com/elysiajs/elysia/issues/742
+					yield sseEvent({
 						id: body.requestId,
 						role: 'assistant',
 						content,
 						done
-					};
+					});
 
 					if (done) {
 						await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''));
@@ -78,7 +86,7 @@ const chatService = new Elysia({ prefix: '/api' })
 			} catch (error: any) {
 				const isAbortError = error.name === 'AbortError';
 				const errorMessage = isAbortError ? 'AI processing canceled' : error.message || 'AI processing error';
-				yield { id: body.requestId, error: errorMessage };
+				yield sseEvent({ id: body.requestId, error: errorMessage });
 			} finally {
 				isStreamClosed = true;
 				abortSignal.removeEventListener('abort', handleAbort);

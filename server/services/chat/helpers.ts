@@ -4,6 +4,8 @@ import { v4 as uuid } from 'uuid';
 import db from '../database';
 import OpenAI from 'openai';
 
+export const sseEvent = (data: any) => `data: ${JSON.stringify(data)}\n\n`;
+
 export const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
 
 export const getOrCreateChat = async (chatId: string, userId: string) => {

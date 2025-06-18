@@ -13,7 +13,7 @@ interface ContextData {
 	setChatInput: SetState<ChatInput>;
 
 	selectedModel: Model;
-	setSelectedModel: SetState<Model>;
+	changeModel: (model: Model) => void;
 
 	session: Session;
 	setSession: SetState<Session>;
@@ -58,10 +58,24 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		localStorage.setItem('appearance', JSON.stringify(newAppearance));
 	};
 
+	const changeModel = (model: Model) => {
+		localStorage.setItem('selectedModel', model.id);
+		setSelectedModel(model);
+	};
+
 	const onLoad = async () => {
 		// Get appearance
 		const appearanceParsed = JSON.parse(localStorage.getItem('appearance') ?? 'null');
 		if (appearanceParsed) _setAppearance(appearanceParsed);
+
+		// Get selected model
+		const selectedModelId = localStorage.getItem('selectedModel');
+		if (selectedModelId) {
+			const selectedModel = await db.models.get(selectedModelId);
+			changeModel(selectedModel ?? (await db.models.toArray())[0] ?? null);
+		} else {
+			changeModel((await db.models.toArray())[0] ?? null);
+		}
 
 		// Get session
 		const session = await getSession();
@@ -86,7 +100,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 			})
 		]);
 
-		setSelectedModel(data.models[0] ?? null);
+		changeModel(data.models[0] ?? null);
 	};
 
 	useEffect(() => {
@@ -113,7 +127,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 				chatInput,
 				setChatInput,
 				selectedModel,
-				setSelectedModel,
+				changeModel,
 				session,
 				setSession,
 				appearance,
