@@ -1,7 +1,7 @@
 import type { App } from '~server/index';
 import { treaty } from '@elysiajs/eden';
 
-const treatyClient = treaty<App>(import.meta.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:8608', {
+const treatyClient = treaty<App>(import.meta.env.VITE_APP_DEV_API ?? '', {
 	fetch: {
 		credentials: 'include'
 	}
