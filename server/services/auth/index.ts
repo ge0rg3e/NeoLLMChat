@@ -14,7 +14,7 @@ const authService = new Elysia({ prefix: '/api/auth' })
 			if (!user) return status(400, 'The username or password is incorrect.');
 
 			const matchPassword = await Bun.password.verify(body.password, user.password, 'bcrypt');
-			if (!matchPassword) return status(400, 'he username or password is incorrect.');
+			if (!matchPassword) return status(400, 'The username or password is incorrect.');
 
 			const accessJWTToken = await jwt.sign({ sub: user.id, exp: getExpTimestamp(ACCESS_TOKEN_EXP) });
 			accessToken.set({ value: accessJWTToken, httpOnly: true, maxAge: ACCESS_TOKEN_EXP, path: '/' });

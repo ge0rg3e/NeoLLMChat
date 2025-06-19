@@ -1,17 +1,17 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '~frontend/components/dialog';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~frontend/components/chart';
+import { InfoIcon, LockIcon, PlusIcon, RefreshCcwIcon, Trash2Icon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList } from 'recharts';
-import { InfoIcon, LockIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { Button } from '~frontend/components/button';
+import { Tooltip } from '~frontend/components/tooltip';
 import { Input } from '~frontend/components/input';
 import { Label } from '~frontend/components/label';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
+import { useEffect, useState } from 'react';
 import apiClient from '~frontend/lib/api';
 import db from '~frontend/lib/dexie';
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Tooltip } from '~frontend/components/tooltip';
 
 const List = () => {
 	const { session } = useApp();
@@ -56,10 +56,12 @@ const List = () => {
 
 				{session?.role === 'admin' ? (
 					<Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
-						<DialogTrigger asChild>
-							<Button variant="ghost" size="icon" title="Add Model">
-								<PlusIcon className="size-4" />
-							</Button>
+						<DialogTrigger>
+							<Tooltip side="left" content="Add Model">
+								<Button variant="ghost" size="icon">
+									<PlusIcon className="size-4" />
+								</Button>
+							</Tooltip>
 						</DialogTrigger>
 						<DialogContent className="max-w-[450px] space-y-3 p-5">
 							<DialogHeader>
@@ -69,27 +71,27 @@ const List = () => {
 							<form className="space-y-3.5 flex-col flex-center-center" onSubmit={handleAddModel}>
 								<div className="w-full space-y-2">
 									<Label htmlFor="model">Model</Label>
-									<Input type="text" id="model" name="model" required />
+									<Input type="text" id="model" name="model" placeholder="e.g. gpt-3.5-turbo" required />
 								</div>
 
 								<div className="w-full space-y-2">
 									<Label htmlFor="provider">Provider</Label>
-									<Input name="provider" id="provider" type="text" required />
+									<Input name="provider" id="provider" type="text" placeholder="e.g. OpenAI" required />
 								</div>
 
 								<div className="w-full space-y-2">
 									<Label htmlFor="apiUrl">ApiUrl</Label>
-									<Input name="apiUrl" type="url" required />
+									<Input name="apiUrl" id="apiUrl" type="url" placeholder="e.g. https://api.openai.com/v1" required />
 								</div>
 
 								<div className="w-full space-y-2">
 									<Label htmlFor="apiKey">
 										ApiKey{' '}
-										<span title="This API key will be stored encrypted in the database">
+										<Tooltip side="right" content="This API key will be stored encrypted in the database.">
 											<LockIcon className="size-3 text-primary" />
-										</span>
+										</Tooltip>
 									</Label>
-									<Input type="password" name="apiKey" required />
+									<Input type="password" name="apiKey" id="apiKey" placeholder="e.g. sk-∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗" required />
 								</div>
 
 								<Button type="submit" className="w-full mt-3">
@@ -99,7 +101,7 @@ const List = () => {
 						</DialogContent>
 					</Dialog>
 				) : (
-					<Tooltip content="Admin role required for managing models." side="left">
+					<Tooltip side="left" content="Admin role required for managing models.">
 						<InfoIcon className="size-4 text-muted-foreground" />
 					</Tooltip>
 				)}
@@ -128,6 +130,8 @@ const List = () => {
 };
 
 const Usage = () => {
+	const models = useLiveQuery(() => db.models.count());
+
 	const [data, setData] = useState<
 		{
 			id: string;
@@ -143,12 +147,18 @@ const Usage = () => {
 
 	useEffect(() => {
 		getData();
-	}, []);
+	}, [models]);
 
 	return (
 		<div className="space-y-2">
 			<div className="flex-between-center">
 				<h2 className="font-medium">Usage</h2>
+
+				<Tooltip side="left" content="Refresh">
+					<Button variant="ghost" size="icon" onClick={async () => await getData()}>
+						<RefreshCcwIcon className="size-4" />
+					</Button>
+				</Tooltip>
 			</div>
 
 			<ChartContainer

@@ -125,7 +125,7 @@ const chatService = new Elysia({ prefix: '/api' })
 					{
 						role: 'user',
 						content:
-							'Generate a concise, descriptive title (max 6 words) that captures the main topic of this conversation. Respond with only the title, no additional text or punctuation.'
+							'Generate a concise, descriptive title (max 6 words) that captures the main topic of this conversation. Return max 6 words. Respond with only the title, no additional text or punctuation. Prevent to return words like <think>.'
 					},
 					...body.messages.map((message) => ({
 						role: message.role,

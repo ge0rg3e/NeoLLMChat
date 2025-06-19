@@ -54,6 +54,7 @@ const Message = ({ data }: Props) => {
 		$('p').addClass('text-sm mb-4');
 		$('ul').addClass('list-disc pl-5');
 		$('li').addClass('mb-2');
+		$('a').addClass('text-primary underline');
 
 		$('pre').addClass('bg-card overflow-auto text-sm text-white my-2 rounded-xl p-4 break-words');
 
