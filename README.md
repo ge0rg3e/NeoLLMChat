@@ -1,67 +1,86 @@
 # NeoLLMChat
 
-A self-hosted LLM Chat Web UI built with React and ElysiaJS.
-
-## Features
-
--   [x] Open Source & Self-Hosted
--   [x] Chat Interface
--   [x] Chat History
--   [x] Multiple Model Support (OpenAI API Protocol Compatible)
--   [x] Secure API Key Encryption
--   [x] Multi-User Authentication
--   [x] File Attachment Capabilities
--   [x] Code Syntax Highlighting
--   [x] Message Editing & Regeneration
--   [x] Web Search (Beta)
+**NeoLLMChat** is a self-hosted chat interface for large language models, built with **React** and **ElysiaJS**. It supports multiple LLM providers, includes user authentication, and offers a fast, clean interface for chatting and managing conversations.
 
 ---
 
-## Setup Guide
+## Features
 
-```yml
+-   [x] Open source and fully self-hosted
+-   [x] Clean and responsive chat interface
+-   [x] Chat history and message editing
+-   [x] Multiple model support (OpenAI-compatible APIs)
+-   [x] Secure API key encryption
+-   [x] Multi-user authentication
+-   [x] File attachments
+-   [x] Syntax highlighting for code
+-   [x] Regenerate messages
+-   [x] Web search (Beta)
+
+---
+
+## Quick Start with Docker
+
+Copy this into your `compose.yml` file:
+
+```yaml
 services:
     neollmchat:
         image: ghcr.io/ge0rg3e/neollmchat:latest
         container_name: neollmchat
-        environment:
-            - DATABASE_URL= # mongodb
-            - CONTENT_ENCRYPTION_KEY= # Buffer.from(randomBytes(32)).toString('base64');
-            - JWT_SECRET= # a strong secret
-            - SEARXNG_HOST=http://localhost:8080 # Required for Web Search
-            - SEARXNG_ENGINES=bing # google,bing,brave
         ports:
             - 8608:8608
+        environment:
+            - DATABASE_URL=mongodb://root:{PASSWORD}@mongodb:27017/
+            - CONTENT_ENCRYPTION_KEY=your_encryption_key_here
+            - JWT_SECRET=your_jwt_secret_here
+            - SEARXNG_HOST=http://localhost:8080
+            - SEARXNG_ENGINES=bing
         restart: always
 
-    searxng: # Required for Web Search
-        container_name: searxng
+    mongodb:
+        image: mongo
+        container_name: mongodb
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+        restart: always
+
+    searxng: # Is required for the web search feature
         image: docker.io/searxng/searxng:latest
-        restart: unless-stopped
+        container_name: searxng
         ports:
             - '8080:8080'
         volumes:
             - ./searxng:/etc/searxng:rw
         environment:
             - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+        restart: unless-stopped
 ```
 
-## Contributing
+### Notes
 
-Contributions are welcome! Here’s how to get started:
+-   Generate a secure encryption key and JWT secret from: https://playcode.io/2428711
+-   Set a strong MongoDB password
 
-1. Fork this repository
-2. Clone your fork locally
-3. Run `bun install` to install dependencies
-4. Make your changes or add features
-5. Test your changes locally
-6. Commit and push your branch
-7. Open a Pull Request describing your improvements
+---
 
-Please keep code style consistent and write clean, simple code.
+## Development Setup
+
+To contribute or run the app locally:
+
+1. Fork and clone the repo
+2. Run `bun install` to install dependencies
+3. Start the dev server
+4. Make your changes
+5. Test everything locally
+6. Commit and push
+7. Open a pull request
+
+Please write clean, simple code that follows existing styles.
 
 ---
 
 ## License
 
-[MIT](LICENSE) License © Ge0rg3e
+MIT License © [Ge0rg3e](LICENSE)
