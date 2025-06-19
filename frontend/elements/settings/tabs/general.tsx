@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 const GeneralTab = () => {
 	const navigate = useNavigate();
-	const { session, setSession } = useApp();
+	const { session, setSession, setAbortControllers } = useApp();
 
 	const handleLogout = async () => {
 		await apiClient.auth.logout.post();
@@ -24,8 +24,10 @@ const GeneralTab = () => {
 		await db.chats.clear();
 
 		const { error } = await apiClient.chats.delete();
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
+		await db.activeRequests.clear();
+		setAbortControllers([]);
 		toast.success('You have successfully deleted all your chats.');
 		navigate('/');
 	};

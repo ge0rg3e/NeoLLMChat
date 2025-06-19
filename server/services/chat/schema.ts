@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 
-export const messages = t.Array(
+const messages = t.Array(
 	t.Object({
 		id: t.String(),
 		role: t.Union([t.Literal('user'), t.Literal('assistant')]),
@@ -14,3 +14,23 @@ export const messages = t.Array(
 		)
 	})
 );
+
+export const chatPost = t.Object({
+	chatId: t.String(),
+	requestId: t.String(),
+	model: t.Object({
+		id: t.String(),
+		params: t.Object({
+			thinkingMode: t.Boolean(),
+			webSearch: t.Boolean()
+		})
+	}),
+	messages: messages
+});
+
+export const generateTitle = t.Object({
+	chatId: t.String(),
+	messages: messages
+});
+
+export const deleteChat = t.Object({ id: t.String() });

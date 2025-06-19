@@ -16,13 +16,15 @@ const SideBar = () => {
 	const location = useLocation();
 	const [searchQuery, setSearchQuery] = useState('');
 	const chats = useLiveQuery(() => db.chats.toArray());
-	const { session, appearance, setAppearance } = useApp();
+	const { session, appearance, setAppearance, setAbortControllers } = useApp();
 
 	const handleDeleteChat = async (chatId: string) => {
 		await db.chats.delete(chatId);
+		await db.activeRequests.delete(chatId);
+		setAbortControllers((prev) => prev.filter((ac) => ac.requestId !== chatId));
 
 		const { error } = await apiClient.chat.delete({ id: chatId });
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
 		toast.success('You have successfully deleted this chat.');
 		navigate('/');

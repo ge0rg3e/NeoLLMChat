@@ -1,11 +1,11 @@
 import { getModel, getModelThinkinParams, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
 import { formatWebResultForLLM, generateSearchQuery, SearchResult, webSearch } from './web-search';
+import { chatPost, deleteChat, generateTitle } from './schema';
 import type { Chat } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
-import { messages } from './schema';
-import Elysia, { t } from 'elysia';
 import db from '../database';
 import OpenAI from 'openai';
+import Elysia from 'elysia';
 
 const chatService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
@@ -107,40 +107,18 @@ const chatService = new Elysia({ prefix: '/api' })
 				abortSignal.removeEventListener('abort', handleAbort);
 			}
 		},
-		{
-			body: t.Object({
-				chatId: t.String(),
-				requestId: t.String(),
-				model: t.Object({
-					id: t.String(),
-					params: t.Object({
-						thinkingMode: t.Boolean(),
-						webSearch: t.Boolean()
-					})
-				}),
-				messages: messages
-			})
-		}
+		{ body: chatPost }
 	)
 	.post(
 		'/chat/generateTitle',
-		async ({ body, set }) => {
+		async ({ body, status }) => {
 			const chat = await db.chat.findUnique({ where: { id: body.chatId }, select: { title: true } });
-			if (!chat) {
-				set.status = 404;
-				return { data: null, error: 'Chat not found' };
-			}
+			if (!chat) return status(404, 'Chat not found.');
 
-			if (chat.title !== 'New chat') {
-				set.status = 400;
-				return { data: null, error: 'Chat has a title' };
-			}
+			if (chat.title !== 'New chat') return status(400, 'Chat has a title.');
 
 			const model = await getModel();
-			if (!model) {
-				set.status = 400;
-				return { data: null, error: 'Model not available' };
-			}
+			if (!model) return status(400, 'Model not available.');
 
 			const response = await model.instance.chat.completions.create({
 				messages: [
@@ -159,69 +137,40 @@ const chatService = new Elysia({ prefix: '/api' })
 			});
 
 			const title = response.choices[0]?.message?.content;
-			if (!title) {
-				set.status = 500;
-				return { data: null, error: 'Failed to generate title' };
-			}
+			if (!title) return status(500, 'Failed to generate title.');
 
-			await db.chat.update({
-				where: {
-					id: body.chatId
-				},
-				data: {
-					title
-				}
-			});
+			await db.chat.update({ where: { id: body.chatId }, data: { title } });
 
-			return { data: { title }, error: null };
+			return { title };
 		},
-		{
-			body: t.Object({
-				chatId: t.String(),
-				messages: messages
-			})
-		}
+		{ body: generateTitle }
 	)
 	.delete(
 		'/chat',
-		async ({ body, user, set }) => {
+		async ({ body, user, status }) => {
 			try {
-				await db.chat.deleteMany({
-					where: {
-						id: body.id,
-						createdBy: user.id
-					}
-				});
-				return { data: true };
+				await db.chat.deleteMany({ where: { id: body.id, createdBy: user.id } });
+				return true;
 			} catch {
-				set.status = 500;
-				return { error: 'Failed to delete chat.' };
+				return status(500, 'Failed to delete chat.');
 			}
 		},
-		{
-			body: t.Object({
-				id: t.String()
-			})
-		}
+		{ body: deleteChat }
 	)
-	.get('/chats', async ({ user }) => {
-		return (await db.chat.findMany({
-			where: {
-				createdBy: user.id
-			}
-		})) as any as Chat;
-	})
-	.delete('/chats', async ({ user, set }) => {
+	.get('/chats', async ({ user, status }) => {
 		try {
-			await db.chat.deleteMany({
-				where: {
-					createdBy: user.id
-				}
-			});
-			return { data: true };
+			const chats = await db.chat.findMany({ where: { createdBy: user.id } });
+			return chats as any as Chat[];
 		} catch {
-			set.status = 500;
-			return { error: 'Failed to delete chats.' };
+			return status(500, 'Failed to get chats.');
+		}
+	})
+	.delete('/chats', async ({ user, status }) => {
+		try {
+			await db.chat.deleteMany({ where: { createdBy: user.id } });
+			return true;
+		} catch {
+			return status(500, 'Failed to delete chats.');
 		}
 	});
 

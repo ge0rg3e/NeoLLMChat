@@ -33,9 +33,9 @@ const Models = () => {
 		e.preventDefault();
 
 		const { data, error } = await apiClient.admin.models.post({ model, provider, apiUrl, apiKey });
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
-		await db.models.put(data.data!);
+		await db.models.put(data);
 		setDialogOpen(false);
 		toast.success('You have successfully added a new model.');
 	};
@@ -45,7 +45,7 @@ const Models = () => {
 		if (!yes) return;
 
 		const { error } = await apiClient.admin.models.delete({ id });
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
 		await db.models.delete(id);
 		toast.success('You have successfully deleted this model.');

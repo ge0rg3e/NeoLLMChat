@@ -19,7 +19,7 @@ const Login = () => {
 		const password = form.password.value;
 
 		const { data, error } = await apiClient.auth.login.post({ username, password });
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
 		setSession(data.session as any);
 

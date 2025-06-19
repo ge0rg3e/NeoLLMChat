@@ -1,10 +1,10 @@
 import { Button } from '~frontend/components/button';
 import { Input } from '~frontend/components/input';
-import Layout from '~frontend/elements/layout';
+import { Label } from '~frontend/components/label';
 import { Link, useNavigate } from 'react-router';
+import Layout from '~frontend/elements/layout';
 import apiClient from '~frontend/lib/api';
 import { toast } from 'sonner';
-import { Label } from '~frontend/components/label';
 
 const Register = () => {
 	const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Register = () => {
 		const password = form.password.value;
 
 		const { error } = await apiClient.auth.register.post({ username, email, password });
-		if (error) return toast.error((error.value as any).error);
+		if (error) return toast.error(error?.value.toString());
 
 		toast.success('You have successfully registered.');
 		navigate('/login');

@@ -94,8 +94,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const requestSync = async () => {
-		const { data } = await apiClient.sync.get();
-		if (!data) return;
+		const { data, error } = await apiClient.sync.get();
+		if (error) return;
 
 		await Promise.all([
 			db.transaction('rw', db.chats, async () => {
