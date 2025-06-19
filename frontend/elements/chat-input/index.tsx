@@ -7,6 +7,7 @@ import { useApp } from '~frontend/lib/context';
 import ModelSelector from './model-selector';
 import { useLocation } from 'react-router';
 import db from '~frontend/lib/dexie';
+import WebSearch from './web-search';
 import Thinking from './thinking';
 import { useMemo } from 'react';
 import useChatApi from './api';
@@ -49,6 +50,7 @@ const ChatInput = () => {
 							<AttachmentsTrigger />
 							<ModelSelector />
 							<Thinking />
+							<WebSearch />
 						</div>
 
 						<Button size="icon" disabled={buttonState.disabled} title={buttonState.label} onClick={handleSend}>

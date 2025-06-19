@@ -24,6 +24,7 @@ export type Model = {
 
 export type ModelParams = {
 	thinkingMode: boolean;
+	webSearch: boolean;
 };
 
 export type Attachment = {

@@ -19,7 +19,6 @@ const app = new Elysia()
 	.use(chatService)
 	.use(adminService)
 	.use(authService)
-
 	.listen(8608);
 
 console.info(`⚡ NeoLLMChat is running at http://${app.server?.hostname}:${app.server?.port}`);

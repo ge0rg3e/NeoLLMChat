@@ -6,7 +6,7 @@ import OpenAI from 'openai';
 
 export const sseEvent = (data: any) => `data: ${JSON.stringify(data)}\n\n`;
 
-export const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, and clear formatting.' as const;
+export const SYSTEM_PROMPT = 'You are a helpful assistant responding in markdown with code blocks, lists, links (from web search), and clear formatting.' as const;
 
 export const getOrCreateChat = async (chatId: string, userId: string) => {
 	let chat = await db.chat.findUnique({ where: { id: chatId } });

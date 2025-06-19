@@ -1,4 +1,5 @@
 import { getModel, getModelThinkinParams, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
+import { formatWebResultForLLM, generateSearchQuery, SearchResult, webSearch } from './web-search';
 import type { Chat } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
 import { messages } from './schema';
@@ -47,14 +48,26 @@ const chatService = new Elysia({ prefix: '/api' })
 				}));
 
 				let params: any = {};
+				let webSearchResults: SearchResult[] = [];
 
-				if (body.model.params.thinkingMode === true) {
+				if (body.model.params.thinkingMode) {
 					params = { ...params, ...getModelThinkinParams(model.provider) };
 				}
 
+				if (body.model.params.webSearch) {
+					const userMessage = body.messages[body.messages.length - 1];
+
+					if (userMessage && userMessage.role === 'user') {
+						const searchQuery = await generateSearchQuery(userMessage.content, model.instance, model.model);
+						webSearchResults = await webSearch(searchQuery);
+					}
+				}
+
+				const finalMessages = [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }, formatWebResultForLLM(webSearchResults)] }, ...formattedMessages];
+
 				const aiResponse = await model.instance.chat.completions.create(
 					{
-						messages: [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }] }, ...formattedMessages],
+						messages: finalMessages,
 						model: model.model,
 						stream: true,
 						// @ts-ignore
@@ -101,7 +114,8 @@ const chatService = new Elysia({ prefix: '/api' })
 				model: t.Object({
 					id: t.String(),
 					params: t.Object({
-						thinkingMode: t.Boolean()
+						thinkingMode: t.Boolean(),
+						webSearch: t.Boolean()
 					})
 				}),
 				messages: messages

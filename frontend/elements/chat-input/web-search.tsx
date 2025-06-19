@@ -1,27 +1,27 @@
 import { Toggle } from '~frontend/components/toggle';
 import { useApp } from '~frontend/lib/context';
-import { BrainIcon } from 'lucide-react';
+import { GlobeIcon } from 'lucide-react';
 
-const Thinking = () => {
+const WebSearch = () => {
 	const { selectedModel, selectedModelParams, setSelectedModelParams } = useApp();
 
-	if (!selectedModel || !selectedModel.details?.haveThinkingMode) return null;
+	if (!selectedModel) return null;
 
 	return (
 		<Toggle
-			pressed={selectedModelParams.thinkingMode}
+			pressed={selectedModelParams.webSearch}
 			onPressedChange={(checked) => {
 				setSelectedModelParams((prev) => ({
 					...prev,
-					thinkingMode: Boolean(checked)
+					webSearch: Boolean(checked)
 				}));
 			}}
 			className="w-fit !h-[32px] shadow-none !bg-transparent !border-none !outline-none !ring-0 hover:!bg-primary/10 cursor-pointer"
 		>
-			<BrainIcon />
-			Thinking
+			<GlobeIcon />
+			Web Search
 		</Toggle>
 	);
 };
 
-export default Thinking;
+export default WebSearch;
