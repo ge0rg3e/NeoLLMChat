@@ -5,6 +5,8 @@
 	"module": "src/index.js",
 	"license": "MIT",
 	"scripts": {
+		"docker:build": "docker build -t ghcr.io/ge0rg3e/neollmchat:latest .",
+		"docker:push": "docker push ghcr.io/ge0rg3e/neollmchat:latest",
 		"dev": "bun run --watch server/index.ts",
 		"db:generate": "bunx prisma generate",
 		"ui:build": "bunx vite build",
