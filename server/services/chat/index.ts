@@ -19,7 +19,7 @@ const chatService = new Elysia({ prefix: '/api' })
 
 			const handleAbort = async () => {
 				if (isStreamClosed) return;
-				const content = aiResponseChunks.join('') + '\n\n**Stopped**';
+				const content = aiResponseChunks.join('') + '\n\n**⛔ Stopped**';
 				await saveMessages(body.chatId, body.messages, content);
 				abortController.abort();
 				isStreamClosed = true;
@@ -100,8 +100,8 @@ const chatService = new Elysia({ prefix: '/api' })
 				}
 			} catch (error: any) {
 				const isAbortError = error.name === 'AbortError';
-				const errorMessage = isAbortError ? 'AI processing canceled' : error.message || 'AI processing error';
-				yield sseEvent({ id: body.requestId, error: errorMessage });
+				const errorMessage = isAbortError ? '\n\n**⛔ Stopped**' : `**⚠️ ${error.message || 'AI processing error'}**`;
+				yield sseEvent({ id: body.requestId, role: 'assistant', content: errorMessage, done: true });
 			} finally {
 				isStreamClosed = true;
 				abortSignal.removeEventListener('abort', handleAbort);

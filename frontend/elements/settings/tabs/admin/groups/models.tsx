@@ -36,7 +36,13 @@ const Models = () => {
 		if (error) return toast.error(error?.value.toString());
 
 		await db.models.put(data);
+
 		setDialogOpen(false);
+		setModel('');
+		setProvider('');
+		setApiUrl('');
+		setApiKey('');
+
 		toast.success('You have successfully added a new model.');
 	};
 
@@ -130,6 +136,8 @@ const Models = () => {
 						</div>
 					</div>
 				))}
+
+				{models?.length === 0 && <p className="text-center text-sm text-muted-foreground">No models yet.</p>}
 			</div>
 		</Fragment>
 	);
