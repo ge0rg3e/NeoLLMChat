@@ -66,3 +66,11 @@ export const getModelThinkinParams = (provider: string) => {
 
 	return params;
 };
+
+export const isCloudFlare502 = (input: string) => {
+	if (input.startsWith('502 <!DOCTYPE html>\n<!--[if lt IE 7]>')) {
+		return true;
+	}
+
+	return false;
+};

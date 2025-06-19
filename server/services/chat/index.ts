@@ -1,4 +1,4 @@
-import { getModel, getModelThinkinParams, getOrCreateChat, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
+import { getModel, getModelThinkinParams, getOrCreateChat, isCloudFlare502, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
 import { formatWebResultForLLM, generateSearchQuery, SearchResult, webSearch } from './web-search';
 import { chatPost, deleteChat, generateTitle } from './schema';
 import type { Chat } from '~frontend/lib/types';
@@ -99,9 +99,13 @@ const chatService = new Elysia({ prefix: '/api' })
 					}
 				}
 			} catch (error: any) {
+				let errorMessage = error.message || 'AI processing error';
 				const isAbortError = error.name === 'AbortError';
-				const errorMessage = isAbortError ? '\n\n**⛔ Stopped**' : `**⚠️ ${error.message || 'AI processing error'}**`;
-				yield sseEvent({ id: body.requestId, role: 'assistant', content: errorMessage, done: true });
+
+				const isCloudFlare502Error = isCloudFlare502(errorMessage);
+				if (isCloudFlare502Error) errorMessage = 'Cloudflare 502 error.';
+
+				yield sseEvent({ id: body.requestId, role: 'assistant', content: isAbortError ? '\n\n**⛔ Stopped**' : `**⚠️ ${errorMessage}**`, done: true });
 			} finally {
 				isStreamClosed = true;
 				abortSignal.removeEventListener('abort', handleAbort);
