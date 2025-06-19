@@ -24,8 +24,8 @@ export const getOrCreateChat = async (chatId: string, userId: string) => {
 	return chat;
 };
 
-export const saveMessages = async (chatId: string, messages: Message[], content: string) => {
-	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content, attachments: [] }];
+export const saveMessages = async (chatId: string, messages: Message[], content: string, modelId: string) => {
+	const updatedMessages = [...messages, { id: uuid(), role: 'assistant' as const, content, attachments: [], modelId }];
 	try {
 		await db.chat.update({ where: { id: chatId }, data: { messages: updatedMessages } });
 	} catch (error) {

@@ -1,13 +1,14 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~frontend/components/dialog';
-import { InfoIcon, PaintBucketIcon, Settings2Icon, UserCogIcon } from 'lucide-react';
+import { InfoIcon, PackageIcon, PaintBucketIcon, Settings2Icon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useApp } from '~frontend/lib/context';
-import AppearanceTab from './tabs/appearance';
 import { twMerge } from '~frontend/lib/utils';
-import GeneralTab from './tabs/general';
-import AdminTab from './tabs/admin';
-import AboutTab from './tabs/about';
 import { useEffect } from 'react';
+
+// Tabs
+import AppearanceTab from './tabs/appearance';
+import GeneralTab from './tabs/general';
+import ModelsTab from './tabs/models';
+import AboutTab from './tabs/about';
 
 const tabs = [
 	{
@@ -23,10 +24,10 @@ const tabs = [
 		Content: AppearanceTab
 	},
 	{
-		id: 'admin',
-		label: 'Admin',
-		icon: UserCogIcon,
-		Content: AdminTab
+		id: 'models',
+		label: 'Models',
+		icon: PackageIcon,
+		Content: ModelsTab
 	},
 	{
 		id: 'about',
@@ -37,7 +38,6 @@ const tabs = [
 ];
 
 const Settings = () => {
-	const { session } = useApp();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const settingsTab = searchParams.get('settings');
@@ -75,8 +75,6 @@ const Settings = () => {
 					{/* Tabs */}
 					<div className="size-full max-w-[180px] space-y-1.5">
 						{tabs.map((tab, index) => {
-							if (tab.id === 'admin' && session?.role !== 'admin') return null;
-
 							return (
 								<button
 									className={twMerge(
@@ -93,7 +91,7 @@ const Settings = () => {
 						})}
 					</div>
 
-					{(tab?.id !== 'admin' || session?.role === 'admin') && tab && <tab.Content />}
+					{tab && <tab.Content />}
 				</div>
 			</DialogContent>
 		</Dialog>

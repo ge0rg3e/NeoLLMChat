@@ -1,10 +1,12 @@
-import frontendService from './services/frontend';
-import adminService from './services/admin';
-import authService from './services/auth';
-import syncService from './services/sync';
-import chatService from './services/chat';
 import { cors } from '@elysiajs/cors';
 import { Elysia } from 'elysia';
+
+// Services
+import frontendService from './services/frontend';
+import modelsService from './services/models';
+import chatService from './services/chat';
+import authService from './services/auth';
+import syncService from './services/sync';
 
 const app = new Elysia()
 	.use(
@@ -17,7 +19,7 @@ const app = new Elysia()
 	.use(syncService)
 	.use(frontendService)
 	.use(chatService)
-	.use(adminService)
+	.use(modelsService)
 	.use(authService)
 	.listen(8608);
 

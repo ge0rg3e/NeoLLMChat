@@ -38,6 +38,7 @@ export type Message = {
 	role: 'user' | 'assistant';
 	content: string;
 	attachments: Array<Attachment>;
+	modelId?: string;
 };
 
 export type Chat = {

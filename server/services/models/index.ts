@@ -1,12 +1,32 @@
 import { getModelDetails } from '~server/definitions/modelsDetails';
 import { encryptContent } from '../content-encryption';
 import { createModel, deleteModel } from './schema';
+import { Chat, Message } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
 import Elysia, { t } from 'elysia';
 import db from '../database';
 
-const adminService = new Elysia({ prefix: '/api/admin' })
+const modelsService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
+	.get('/models/usage', async ({}) => {
+		let messages: Message[] = [];
+		const allModels = await db.model.findMany();
+		const allChats = await db.chat.findMany();
+
+		for await (const chat of allChats as Chat[]) {
+			messages.push(...chat.messages);
+		}
+
+		messages = messages.filter((message) => message.role === 'assistant' && message.modelId !== undefined);
+
+		const usage = allModels.map((model) => ({
+			id: model.id,
+			model: model.model,
+			messageCount: messages.filter((message) => message.modelId === model.id).length
+		}));
+
+		return usage;
+	})
 	.post(
 		'/models',
 		async ({ body, user, status }) => {
@@ -38,4 +58,4 @@ const adminService = new Elysia({ prefix: '/api/admin' })
 		{ body: deleteModel }
 	);
 
-export default adminService;
+export default modelsService;

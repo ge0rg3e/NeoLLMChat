@@ -20,7 +20,7 @@ const chatService = new Elysia({ prefix: '/api' })
 			const handleAbort = async () => {
 				if (isStreamClosed) return;
 				const content = aiResponseChunks.join('') + '\n\n**⛔ Stopped**';
-				await saveMessages(body.chatId, body.messages, content);
+				await saveMessages(body.chatId, body.messages, content, body.model.id);
 				abortController.abort();
 				isStreamClosed = true;
 			};
@@ -94,7 +94,7 @@ const chatService = new Elysia({ prefix: '/api' })
 					});
 
 					if (done) {
-						await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''));
+						await saveMessages(body.chatId, body.messages, aiResponseChunks.join(''), model.id);
 						break;
 					}
 				}
