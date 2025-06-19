@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, PencilIcon, RefreshCcwIcon, XIcon } from 'lucide-react';
 import type { Message as _Message } from '~frontend/lib/types';
-import { Fragment, useEffect, useState } from 'react';
 import { Tooltip } from '~frontend/components/tooltip';
+import { Fragment, useEffect, useState } from 'react';
 import { Button } from '~frontend/components/button';
 import { markedHighlight } from 'marked-highlight';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -21,12 +21,6 @@ const Message = ({ data }: Props) => {
 	const [editedContent, setEditedContent] = useState(data.content);
 	const [formattedContent, setFormattedContent] = useState<string>('');
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
-
-	const scrollToLastMessage = () => {
-		const chatMessages = document.getElementById('chat-messages');
-		if (!chatMessages) return;
-		chatMessages.scrollTop = chatMessages.scrollHeight;
-	};
 
 	const formatContent = async () => {
 		const marked = new Marked(
@@ -85,8 +79,6 @@ const Message = ({ data }: Props) => {
 		});
 
 		setFormattedContent($.html());
-
-		scrollToLastMessage();
 	};
 
 	useEffect(() => {

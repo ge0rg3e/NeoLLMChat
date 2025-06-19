@@ -1,6 +1,7 @@
+import { ArrowDownIcon, SendHorizontalIcon, SquareIcon } from 'lucide-react';
 import { AttachmentsPreview, AttachmentsTrigger } from './attachments';
-import { SendHorizontalIcon, SquareIcon } from 'lucide-react';
 import { twMerge, useScreen } from '~frontend/lib/utils';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '~frontend/components/button';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
@@ -9,7 +10,6 @@ import { useLocation } from 'react-router';
 import db from '~frontend/lib/dexie';
 import WebSearch from './web-search';
 import Thinking from './thinking';
-import { useMemo } from 'react';
 import useChatApi from './api';
 
 const ChatInput = () => {
@@ -17,6 +17,7 @@ const ChatInput = () => {
 	const { pathname } = useLocation();
 	const { chatInput, setChatInput } = useApp();
 	const { chatId, sendMessage, stopRequest } = useChatApi();
+	const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 	const activeRequests = useLiveQuery(() => db.activeRequests.toArray());
 
 	const handleSend = () => (activeRequests?.find((r) => r.chatId === chatId) ? stopRequest() : sendMessage());
@@ -28,9 +29,34 @@ const ChatInput = () => {
 		return { disabled: false, icon: SendHorizontalIcon, label: 'Send' };
 	}, [chatId, chatInput, activeRequests]);
 
+	useEffect(() => {
+		const chatMessages = document.getElementById('chat-messages');
+		if (!chatMessages) return;
+
+		chatMessages.addEventListener('scroll', () => {
+			const state = chatMessages.scrollTop + chatMessages.clientHeight >= chatMessages.scrollHeight;
+			setShowScrollToBottom(!state);
+		});
+	}, []);
+
 	return (
 		<div className={twMerge('w-full flex items-center justify-center', pathname.includes('/c') && 'fixed bottom-5 max-w-[calc(100vw-270px)]', size.width < 1100 && 'max-w-full px-5')}>
 			<div className="w-full max-w-[765px] max-h-[200px] p-2 rounded-3xl bg-accent/50 backdrop-blur-xl">
+				{showScrollToBottom && (
+					<Button
+						onClick={() => {
+							const chatMessages = document.getElementById('chat-messages');
+							if (!chatMessages) return;
+							chatMessages.scroll({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+						}}
+						className=" absolute bottom-40 right-0"
+						variant="outline"
+						size="icon"
+					>
+						<ArrowDownIcon />
+					</Button>
+				)}
+
 				<div className="flex flex-col w-full h-full rounded-2xl bg-accent/70">
 					<AttachmentsPreview />
 					<textarea

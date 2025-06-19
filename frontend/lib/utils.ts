@@ -54,3 +54,9 @@ export const formatDateGroup = (date: Date): string => {
 		return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
 	}
 };
+
+export const scrollToLastMessage = () => {
+	const chatMessages = document.getElementById('chat-messages');
+	if (!chatMessages) return;
+	chatMessages.scroll({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+};

@@ -2,11 +2,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '~frontend/components/po
 import { BrainIcon, ChevronDownIcon } from 'lucide-react';
 import { Tooltip } from '~frontend/components/tooltip';
 import { Button } from '~frontend/components/button';
+import { truncateString } from '~frontend/lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useApp } from '~frontend/lib/context';
 import db from '~frontend/lib/dexie';
 import { useState } from 'react';
-import { truncateString } from '~frontend/lib/utils';
 
 const ModelSelector = () => {
 	const [open, setOpen] = useState(false);

@@ -1,4 +1,5 @@
 import apiClient, { parseChatChunk } from '~frontend/lib/api';
+import { scrollToLastMessage } from '~frontend/lib/utils';
 import type { Chat, Message } from '~frontend/lib/types';
 import { useNavigate, useParams } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -23,6 +24,7 @@ const useChatApi = () => {
 			createdAt: new Date()
 		});
 		navigate(`/c/${newChatId}`);
+
 		// Return the new chat object directly
 		return { id: newChatId, messages: [] };
 	};
@@ -49,11 +51,12 @@ const useChatApi = () => {
 		const userMessage: Message = { id: requestId, role: 'user', content: input, attachments };
 		const updatedMessages: Message[] = [...chat!.messages, userMessage];
 
-		// updateChatMessages(targetChatId, 'add', userMessage.id, userMessage);
 		await db.chats.update(targetChatId, { messages: updatedMessages });
 
 		// Reset input
 		setChatInput({ text: '', attachments: [] });
+
+		scrollToLastMessage();
 
 		// Send request to LLM
 		const abortController = new AbortController();
@@ -80,6 +83,7 @@ const useChatApi = () => {
 				await db.chats.update(targetChatId, { messages: [...updatedMessages, { id: assistantMessageId, role: 'assistant', content: assistantContent, attachments: [] }] });
 
 				if (data.done) {
+					scrollToLastMessage();
 					await db.activeRequests.delete(requestId);
 					setAbortControllers((prev) => prev.filter((c) => c.requestId !== requestId));
 
