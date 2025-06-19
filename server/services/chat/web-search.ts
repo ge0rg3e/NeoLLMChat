@@ -1,3 +1,4 @@
+import * as cheerio from 'cheerio';
 import OpenAI from 'openai';
 import axios from 'axios';
 
@@ -5,30 +6,49 @@ export type SearchResult = {
 	url: string;
 	title: string;
 	content: string;
-	thumbnail: string;
-	engine: string;
-	template: string;
-	parsed_url: string[];
-	img_src: string;
-	priority: string;
-	engines: string[];
-	positions: number[];
-	score: number;
-	category: string;
-	publishedDate: any;
 };
 
 export const webSearch = async (query: string) => {
 	try {
-		const searchResponse = await axios.get(Bun.env.SEARXNG_HOST!, {
-			params: {
-				q: query,
-				format: 'json',
-				engines: Bun.env.SEARXNG_ENGINES ?? 'bing'
+		const searxngHost = process.env.SEARXNG_HOST!;
+		const engines = process.env.SEARXNG_ENGINES || 'bing';
+		const searchUrl = new URL(searxngHost);
+		searchUrl.searchParams.append('q', query);
+		searchUrl.searchParams.append('engines', engines);
+
+		const response = await axios.get(searchUrl.toString(), {
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 			}
 		});
 
-		return searchResponse.data.results.slice(0, 10) as SearchResult[];
+		const html = response.data;
+		const $ = cheerio.load(html);
+		const results: SearchResult[] = [];
+
+		$('.result').each((_, element) => {
+			const titleElement = $(element).find('h3 a, .title a');
+			const urlElement = $(element).find('a.url_wrapper, a[href]');
+			const contentElement = $(element).find('p, .content, .description, .snippet');
+
+			const title = titleElement.text().trim();
+			let url = urlElement.attr('href') || '';
+			const content = contentElement.text().trim();
+
+			if (url && !url.startsWith('http')) {
+				url = new URL(url, searxngHost).toString();
+			}
+
+			if (title && url && content) {
+				results.push({
+					url,
+					title,
+					content
+				});
+			}
+		});
+
+		return results.slice(0, 10);
 	} catch {
 		return [];
 	}

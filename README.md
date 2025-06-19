@@ -44,10 +44,6 @@ services:
             - ./searxng:/etc/searxng:rw
         environment:
             - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
-    # Initial Setup Requirements
-    # 1. Navigate to ./searxng/settings.yml
-    # 2. Locate the "formats" section
-    # 3. Replace "- html" with "- json" to enable JSON response format
 ```
 
 ## Contributing
