@@ -66,6 +66,19 @@ services:
 
 ---
 
+## Known Issues
+
+For some providers, streamed response data may appear incomplete in the frontend. However, the complete response is properly saved on the server and will appear after the frontend syncs with the server.
+
+This issue is being investigated and will be resolved in future updates.
+
+**Tested providers where this issue doesn't seem to appear:**
+
+-   Ollama (Localhost & RunPod)
+-   DeepSeek (Official API)
+
+---
+
 ## Development Setup
 
 To contribute or run the app locally:
