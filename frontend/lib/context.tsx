@@ -23,6 +23,9 @@ interface ContextData {
 
 	appearance: Appearance;
 	setAppearance: (params: Partial<Appearance>) => void;
+
+	showSearch: boolean;
+	setShowSearch: SetState<boolean>;
 }
 
 const getSession = async () => {
@@ -56,6 +59,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		sidebarSide: 'left',
 		theme: 'dark'
 	});
+	const [showSearch, setShowSearch] = useState(false);
 
 	const setAppearance = (params: Partial<Appearance>) => {
 		const newAppearance = { ...appearance, ...params };
@@ -141,7 +145,9 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 				session,
 				setSession,
 				appearance,
-				setAppearance
+				setAppearance,
+				showSearch,
+				setShowSearch
 			}}
 		>
 			{children}

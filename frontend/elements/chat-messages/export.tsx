@@ -4,6 +4,7 @@ import { Button } from '~frontend/components/button';
 import { twMerge, useScreen } from '~frontend/lib/utils';
 import { DownloadIcon } from 'lucide-react';
 import db from '~frontend/lib/dexie';
+import { useApp } from '~frontend/lib/context';
 
 const downloadFile = (filename: string, content: string | Blob) => {
 	const blob = typeof content === 'string' ? new Blob([content], { type: 'text/plain' }) : content;
@@ -97,6 +98,7 @@ const formatMessagesAsPDF = async (messages: Message[], chatTitle: string) => {
 
 export const ExportChat = ({ chatId }: { chatId: string }) => {
 	const { size } = useScreen();
+	const { appearance } = useApp();
 
 	const handleExport = async (format: 'pdf' | 'md' | 'txt') => {
 		const chats = await db.chats.toArray();
@@ -124,7 +126,7 @@ export const ExportChat = ({ chatId }: { chatId: string }) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button className={twMerge('absolute top-3 right-4', size.width < 890 && '!backdrop-blur-xl')} variant="outline" size="icon">
+				<Button className={twMerge('absolute top-3', size.width < 890 && '!backdrop-blur-xl', appearance.sidebarSide === 'left' ? 'right-3' : 'left-3')} variant="outline" size="icon">
 					<DownloadIcon />
 				</Button>
 			</DropdownMenuTrigger>
