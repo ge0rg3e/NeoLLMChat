@@ -39,7 +39,6 @@
 		"lucide-react": "^0.513.0",
 		"marked": "^15.0.12",
 		"marked-highlight": "^2.2.1",
-		"openai": "^5.1.1",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"react-router": "^7.6.2",

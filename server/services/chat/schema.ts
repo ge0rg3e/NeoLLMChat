@@ -29,6 +29,7 @@ export const chatPost = t.Object({
 
 export const generateTitle = t.Object({
 	chatId: t.String(),
+	modelId: t.String(),
 	messages: messages
 });
 

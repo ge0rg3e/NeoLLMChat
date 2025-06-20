@@ -264,7 +264,7 @@ const useChatApi = () => {
 	};
 
 	const generateTitle = async (chatId: string, messages: Message[]) => {
-		const { data } = await apiClient.chat.generateTitle.post({ chatId, messages });
+		const { data } = await apiClient.chat.generateTitle.post({ chatId, modelId: selectedModel!.id, messages });
 		if (!data) return;
 
 		await db.chats.update(chatId, { title: data.title });
