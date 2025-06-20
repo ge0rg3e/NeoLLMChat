@@ -16,6 +16,7 @@
 -   [x] Syntax highlighting for code
 -   [x] Regenerate messages
 -   [x] Web search (Beta)
+-   [x] Export Chat (PDF, Markdown, Plain Text)
 
 ---
 

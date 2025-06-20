@@ -30,9 +30,9 @@ const Layout = ({ className, protectedRoute = false, children }: Props) => {
 				{!isAuthPage && appearance.sidebarClosed && (
 					<Tooltip content="Open Sidebar" side={appearance.sidebarSide === 'left' ? 'right' : 'left'}>
 						<Button
-							className={twMerge('absolute top-3', appearance.sidebarSide === 'left' ? 'left-3' : 'right-3')}
+							className={twMerge('absolute top-3 z-10', appearance.sidebarSide === 'left' ? 'left-3' : 'right-3', size.width < 890 && '!backdrop-blur-xl')}
 							onClick={() => setAppearance({ sidebarClosed: false })}
-							variant="ghost"
+							variant={size.width < 890 ? 'outline' : 'ghost'}
 							size="icon-lg"
 						>
 							{appearance.sidebarSide === 'right' ? <PanelLeftCloseIcon /> : <PanelLeftOpenIcon />}
