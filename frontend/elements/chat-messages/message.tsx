@@ -102,8 +102,8 @@ const Message = ({ data }: Props) => {
 			return;
 		}
 
-		await editMessage(data.id, editedContent);
 		setIsEditing(false);
+		await editMessage(data.id, editedContent);
 	};
 
 	const handleEditCancel = () => {
@@ -115,10 +115,8 @@ const Message = ({ data }: Props) => {
 
 	return (
 		<div className="w-full max-w-[755px] mx-auto space-y-2 group">
-			{data.role === 'user' && isEditing ? (
-				<div className="bg-card rounded-xl py-2 px-3 w-fit">
-					<textarea className="w-full size-fit bg-transparent resize-none outline-none" value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
-				</div>
+			{isEditing ? (
+				<textarea className="bg-accent/50 rounded-xl py-2 px-3 w-fit resize-none outline-none" value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
 			) : data.role === 'user' ? (
 				<p className="bg-accent/50 rounded-xl py-2 px-3 w-fit">{data.content}</p>
 			) : (
