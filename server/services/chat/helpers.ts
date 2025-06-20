@@ -43,30 +43,6 @@ export const getModel = async (id?: string) => {
 	return { id: model.id, model: model.model, provider: model.provider, apiUrl: model.apiUrl, decryptedApiKey, instance };
 };
 
-export const getModelThinkinParams = (provider: string) => {
-	let params: any = {};
-
-	if (provider === 'Gemini') {
-		params = {
-			extra_body: {
-				google: {
-					thinking_config: {
-						include_thoughts: true
-					}
-				}
-			}
-		};
-	}
-
-	if (provider === 'Anthropic') {
-		params = {
-			thinking: { type: 'enabled', budget_tokens: 2000 }
-		};
-	}
-
-	return params;
-};
-
 export const isCloudFlare502 = (input: string) => {
 	if (input.startsWith('502 <!DOCTYPE html>\n<!--[if lt IE 7]>')) {
 		return true;

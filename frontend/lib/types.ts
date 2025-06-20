@@ -13,17 +13,9 @@ export type Model = {
 	id: string;
 	model: string;
 	provider: string;
-	details: {
-		haveThinkingMode: boolean;
-		supportAttachments: boolean;
-		multimodal: boolean;
-		maxContextLength: number;
-		specialFeatures: string[];
-	} | null;
 };
 
 export type ModelParams = {
-	thinkingMode: boolean;
 	webSearch: boolean;
 };
 

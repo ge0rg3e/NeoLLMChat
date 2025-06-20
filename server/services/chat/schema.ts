@@ -21,7 +21,6 @@ export const chatPost = t.Object({
 	model: t.Object({
 		id: t.String(),
 		params: t.Object({
-			thinkingMode: t.Boolean(),
 			webSearch: t.Boolean()
 		})
 	}),

@@ -46,7 +46,7 @@ export const useApp = () => {
 };
 
 const AppContextProvider = ({ children }: { children: ReactNode }) => {
-	const [selectedModelParams, setSelectedModelParams] = useState<ModelParams>({ thinkingMode: false, webSearch: false });
+	const [selectedModelParams, setSelectedModelParams] = useState<ModelParams>({ webSearch: false });
 	const [chatInput, setChatInput] = useState<ChatInput>({ text: '', attachments: [] });
 	const [abortControllers, setAbortControllers] = useState<_AbortController[]>([]);
 	const [selectedModel, setSelectedModel] = useState<Model>({} as any);
@@ -68,7 +68,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
 		localStorage.setItem('selectedModel', model.id);
 		setSelectedModel(model);
-		setSelectedModelParams({ thinkingMode: false, webSearch: false });
+		setSelectedModelParams({ webSearch: false });
 	};
 
 	const onLoad = async () => {

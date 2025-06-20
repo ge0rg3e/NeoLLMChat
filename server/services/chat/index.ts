@@ -1,10 +1,9 @@
-import { getModel, getModelThinkinParams, getOrCreateChat, isCloudFlare502, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
+import { getModel, getOrCreateChat, isCloudFlare502, saveMessages, sseEvent, SYSTEM_PROMPT } from './helpers';
 import { formatWebResultForLLM, generateSearchQuery, SearchResult, webSearch } from './web-search';
 import { chatPost, deleteChat, generateTitle } from './schema';
 import type { Chat } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
 import db from '../database';
-import OpenAI from 'openai';
 import Elysia from 'elysia';
 
 const chatService = new Elysia({ prefix: '/api' })
@@ -33,7 +32,7 @@ const chatService = new Elysia({ prefix: '/api' })
 				const model = await getModel(body.model.id);
 				if (!model) throw new Error('Model not found');
 
-				const formattedMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = body.messages.map((message) => ({
+				const formattedMessages: any[] = body.messages.map((message) => ({
 					id: message.id,
 					role: message.role as any,
 					content: [
@@ -47,12 +46,7 @@ const chatService = new Elysia({ prefix: '/api' })
 					]
 				}));
 
-				let params: any = {};
 				let webSearchResults: SearchResult[] = [];
-
-				if (body.model.params.thinkingMode) {
-					params = { ...params, ...getModelThinkinParams(model.provider) };
-				}
 
 				if (body.model.params.webSearch) {
 					const userMessage = body.messages[body.messages.length - 1];
@@ -63,15 +57,11 @@ const chatService = new Elysia({ prefix: '/api' })
 					}
 				}
 
-				const finalMessages = [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }, formatWebResultForLLM(webSearchResults)] }, ...formattedMessages];
-
 				const aiResponse = await model.instance.chat.completions.create(
 					{
-						messages: finalMessages,
+						messages: [{ role: 'system', content: [{ type: 'text', text: SYSTEM_PROMPT }, formatWebResultForLLM(webSearchResults)] }, ...formattedMessages],
 						model: model.model,
-						stream: true,
-						// @ts-ignore
-						...params
+						stream: true
 					},
 					{ signal: abortController.signal }
 				);

@@ -9,7 +9,6 @@ import ModelSelector from './model-selector';
 import { useLocation } from 'react-router';
 import db from '~frontend/lib/dexie';
 import WebSearch from './web-search';
-import Thinking from './thinking';
 import useChatApi from './api';
 
 const ChatInput = () => {
@@ -75,7 +74,6 @@ const ChatInput = () => {
 						<div className="flex-start-center gap-x-2">
 							<AttachmentsTrigger />
 							<ModelSelector />
-							<Thinking />
 							<WebSearch />
 						</div>
 

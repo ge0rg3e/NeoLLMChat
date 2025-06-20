@@ -1,10 +1,9 @@
-import { getModelDetails } from '~server/definitions/modelsDetails';
 import { encryptContent } from '../content-encryption';
 import { createModel, deleteModel } from './schema';
 import { Chat, Message } from '~frontend/lib/types';
 import authPlugin from '../auth/plugin';
-import Elysia, { t } from 'elysia';
 import db from '../database';
+import Elysia from 'elysia';
 
 const modelsService = new Elysia({ prefix: '/api' })
 	.use(authPlugin)
@@ -20,7 +19,6 @@ const modelsService = new Elysia({ prefix: '/api' })
 		messages = messages.filter((message) => message.role === 'assistant' && message.modelId !== undefined);
 
 		const usage = allModels.map((model) => ({
-			id: model.id,
 			model: model.model,
 			messageCount: messages.filter((message) => message.modelId === model.id).length
 		}));
@@ -39,7 +37,7 @@ const modelsService = new Elysia({ prefix: '/api' })
 				select: { id: true, model: true, provider: true }
 			});
 
-			return { ...newModel, details: getModelDetails(newModel.model) };
+			return newModel;
 		},
 		{ body: createModel }
 	)

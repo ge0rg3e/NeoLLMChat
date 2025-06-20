@@ -11,7 +11,10 @@ const AppearanceTab = () => {
 		<div className="size-full pl-3 space-y-5 animate-in fade-in">
 			{/* Theme Selector */}
 			<div className="flex-between-center">
-				<div>Theme</div>
+				<div>
+					<div>Theme</div>
+					<p className="text-xs text-muted-foreground">Select the preferred theme.</p>
+				</div>
 
 				<div className="flex-end-center gap-x-1">
 					<Tooltip content="Dark Theme">
@@ -30,7 +33,10 @@ const AppearanceTab = () => {
 
 			{/* SideBar Side Selector */}
 			<div className="flex-between-center">
-				<div>SideBar Side</div>
+				<div>
+					<div>SideBar Side</div>
+					<p className="text-xs text-muted-foreground">Select the side where the sidebar should appear.</p>
+				</div>
 
 				<div className="flex-end-center gap-x-1">
 					<Tooltip content="Left">

@@ -1,9 +1,8 @@
 import { Popover, PopoverContent, PopoverTrigger } from '~frontend/components/popover';
-import { BrainIcon, ChevronDownIcon } from 'lucide-react';
-import { Tooltip } from '~frontend/components/tooltip';
 import { Button } from '~frontend/components/button';
 import { truncateString } from '~frontend/lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { ChevronDownIcon } from 'lucide-react';
 import { useApp } from '~frontend/lib/context';
 import db from '~frontend/lib/dexie';
 import { useState } from 'react';
@@ -33,16 +32,6 @@ const ModelSelector = () => {
 					>
 						<div className="text-sm" title={model.model}>
 							{truncateString(model.model, 26)}
-						</div>
-
-						<div className="flex-end-center gap-x-2">
-							{model.details?.haveThinkingMode && (
-								<Tooltip content="Thinking Mode" side="top">
-									<div className="bg-card size-4 flex-center-center rounded-md">
-										<BrainIcon />
-									</div>
-								</Tooltip>
-							)}
 						</div>
 					</div>
 				))}

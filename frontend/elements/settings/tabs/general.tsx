@@ -57,8 +57,10 @@ const GeneralTab = () => {
 
 			{/* Data Control */}
 			<div className="flex-between-center">
-				<div>Delete Chats History</div>
-
+				<div>
+					<div>Delete Chats History</div>
+					<p className="text-xs text-muted-foreground">Delete all your chats history.</p>
+				</div>
 				<Button variant="outline" onClick={handleDeleteChats}>
 					Delete
 				</Button>

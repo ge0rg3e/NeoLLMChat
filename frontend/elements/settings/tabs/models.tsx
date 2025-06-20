@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '~frontend/components/dialog';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~frontend/components/chart';
 import { InfoIcon, LockIcon, PlusIcon, RefreshCcwIcon, Trash2Icon } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, LabelList } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from 'recharts';
 import { Button } from '~frontend/components/button';
 import { Tooltip } from '~frontend/components/tooltip';
 import { Input } from '~frontend/components/input';
@@ -134,7 +134,6 @@ const Usage = () => {
 
 	const [data, setData] = useState<
 		{
-			id: string;
 			model: string;
 			messageCount: number;
 		}[]
@@ -143,6 +142,15 @@ const Usage = () => {
 	const getData = async () => {
 		const response = await apiClient.models.usage.get();
 		if (response.data) setData(response.data);
+	};
+
+	const chartConfig = {
+		messageCount: {
+			label: 'Message Count'
+		},
+		model: {
+			label: 'Model'
+		}
 	};
 
 	useEffect(() => {
@@ -161,33 +169,26 @@ const Usage = () => {
 				</Tooltip>
 			</div>
 
-			<ChartContainer
-				className="bg-accent/50 rounded-lg"
-				config={{
-					messageCount: {
-						label: 'Message Count',
-						color: '#fff'
-					}
-				}}
-			>
-				<BarChart
-					accessibilityLayer
-					data={data}
-					layout="vertical"
-					margin={{
-						top: 35,
-						bottom: 35,
-						right: 16,
-						left: 14
-					}}
-				>
-					<CartesianGrid horizontal={false} />
+			<ChartContainer config={chartConfig} className="bg-accent/50 rounded-lg">
+				{data.length > 0 ? (
+					<BarChart accessibilityLayer data={data}>
+						<CartesianGrid vertical={false} />
+						<XAxis dataKey="model" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(value) => value} />
+						<ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value: any) => `${value} message${value > 1 ? 's' : ''}`} hideLabel />} />
 
-					<ChartTooltip cursor={{ fill: 'transparent', opacity: 0.1 }} content={<ChartTooltipContent indicator="line" labelFormatter={(_value, payload) => payload[0].payload.model} />} />
-					<Bar dataKey="messageCount" layout="vertical" fill="#a995c95c" radius={4}>
-						<LabelList dataKey="model" position="insideLeft" offset={12} fontSize={12} className="fill-foreground" />
-					</Bar>
-				</BarChart>
+						<Bar
+							dataKey="messageCount"
+							strokeWidth={2}
+							fill="var(--chart-1)"
+							radius={8}
+							activeBar={({ ...props }) => {
+								return <Rectangle {...props} fillOpacity={0.8} stroke={props.payload.fill} strokeDasharray={4} strokeDashoffset={4} />;
+							}}
+						/>
+					</BarChart>
+				) : (
+					<div className="flex-center-center h-full text-sm text-muted-foreground">No data yet.</div>
+				)}
 			</ChartContainer>
 		</div>
 	);
