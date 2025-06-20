@@ -113,8 +113,10 @@ const useChatApi = () => {
 		const lastMessage = chat?.messages[chat.messages.length - 1];
 
 		if (lastMessage?.role === 'assistant') {
-			const updatedContent = `${lastMessage.content}\n\n**Stopped**`;
-			await db.chats.update(chatId, { messages: [...chat!.messages, { ...lastMessage, content: updatedContent }] });
+			const updatedContent = `${lastMessage.content}\n\n**⛔ Stopped**`;
+			const updatedMessages = [...chat!.messages];
+			updatedMessages[updatedMessages.length - 1] = { ...lastMessage, content: updatedContent };
+			await db.chats.update(chatId, { messages: updatedMessages });
 		}
 
 		await db.activeRequests.delete(activeRequest.requestId);
